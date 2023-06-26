@@ -1,0 +1,66 @@
+name: Default
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend_tests:
+    name: Tests & Lints LLM Gateway Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Poetry
+        run: pip install poetry==1.3.2 # gitleaks:allow
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version-file: .python-version
+          cache: poetry
+
+      - name: Install Python dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          poetry install --no-root --no-interaction
+
+      - name: Run style guide, linter and typing checks
+        working-directory: ${{ github.workspace }}
+        run: |
+          source $(poetry env info --path)/bin/activate
+          flake8 llm_gateway
+
+      - name: Run Python Test Suite
+        run: poetry run pytest
+
+  frontend_tests:
+    name: Tests & Lints LLM Gateway Frontend
+    strategy:
+      matrix:
+        node-version: [16.13.1]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: |
+          npm install -g yarn
+          (cd front_end && yarn install)
+
+      - name: Check compatible licenses
+        run: (cd front_end && yarn check-license)
+
+      - name: Run linting
+        run: (cd front_end && yarn lint)
+
+      - name: Run Tests
+        run: (cd front_end && yarn test)
