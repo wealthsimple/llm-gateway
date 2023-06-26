@@ -10,17 +10,17 @@
 
 Per OpenAI's non-API consumer products [data usage policy](https://help.openai.com/en/articles/7039943-data-usage-for-consumer-services-faq), they "may use content such as prompts, responses, uploaded images, and generated images to improve our services" to improve products like ChatGPT and DALL-E.
 
-Use `llm-gateway` to interact with third providers in a safe manner. The gateway also recreates the ChatGPT frontend using OpenAI's `/ChatCompletion` endpoint to keep all communication within the API.
+Use `llm-gateway` to interact with OpenAI in a safe manner. The gateway also recreates the ChatGPT frontend using OpenAI's `/ChatCompletion` endpoint to keep all communication within the API.
 
 ## ⚒️ Usage
 
-The `OPENAI_API_KEY` and `COHERE_API_KEY` needs to be saved as an environment variable.
+The provider's API key needs to be saved as an environment variable (see setup further down). If you are communicating with OpenAI, set `OPENAI_API_KEY`.
 
 ### API Usage
 [OpenAI] Example cURL to `/completion` endpoint:
 ```
 curl -X 'POST' \
-  'https://<host>/api/openai/completion' \
+  'http://<host>/api/openai/completion' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -34,7 +34,7 @@ curl -X 'POST' \
 [OpenAI] When using the `/chat_completion` endpoint, formulate as conversation between user and assistant.
 ```
 curl -X 'POST' \
-  'https://<host>/api/openai/chat_completion' \
+  'http://<host>/api/openai/chat_completion' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -76,8 +76,9 @@ If using Docker, steps 1-3 are optional. We recommend installing pre-commit hook
 2. Install `pyenv install 3.11.3`
 3. Install project requirments
 ```
+brew install gitleaks
 poetry install
-pre-commit install
+poetry run pre-commit install
 ```
 4. Run `cp .envrc.example .envrc` and update with API secrets
 
