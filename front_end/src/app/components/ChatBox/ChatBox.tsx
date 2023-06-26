@@ -117,7 +117,7 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
       <textarea
         id="input-box"
         value={inputVal}
-        placeholder='Send a message'
+        placeholder="Send a message"
         onChange={(e) => {
           setInputVal(e.target.value);
         }}

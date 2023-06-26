@@ -7,7 +7,7 @@
 #send-button {
   width: 90%;
   background-color: #486635;
-  color:#E9F5DF
+  color: #e9f5df;
 }
 
 #send-buttons-div {
@@ -16,7 +16,7 @@
 }
 
 #error-message {
-  color: #A34D12;
+  color: #a34d12;
   font-weight: bold;
 }
 
@@ -44,21 +44,21 @@
 }
 
 .message-user {
-  border: 2px #ECF3D5;
+  border: 2px #ecf3d5;
   border-top-right-radius: 0;
   margin-left: auto;
   margin-right: 16px;
-  background-color: #ECF3D5;
-  color: #32302F
+  background-color: #ecf3d5;
+  color: #32302f;
 }
 
 .message-assistant {
-  border: 2px #F1F0F0;
+  border: 2px #f1f0f0;
   border-top-left-radius: 0;
   margin-right: auto;
   margin-left: 8px;
-  background-color: #F1F0F0;
-  color: #1C1B1B
+  background-color: #f1f0f0;
+  color: #1c1b1b;
 }
 
 /* For ol (ordered lists), make sure to retain numbers. Otherwise it defaults
@@ -80,7 +80,7 @@
   padding: 0.1rem 0.5rem;
   display: flex;
   justify-content: space-between;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
 }
 
 .clipboard {
