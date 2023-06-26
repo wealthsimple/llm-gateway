@@ -12,7 +12,7 @@ Per OpenAI's non-API consumer products [data usage policy](https://help.openai.c
 
 Use `llm-gateway` to interact with third providers in a safe manner. The gateway also recreates the ChatGPT frontend using OpenAI's `/ChatCompletion` endpoint to keep all communication within the API.
 
-## Usage
+## ⚒️ Usage
 
 The `OPENAI_API_KEY` and `COHERE_API_KEY` needs to be saved as an environment variable.
 
@@ -68,7 +68,9 @@ wrapper.send_openai_request(
 This project uses Poetry, Pyenv for dependency and environment management. Check out the official installation documentation for [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) and [Pyenv](https://github.com/pyenv/pyenv) to get started.
 For front-end portion, this project use npm and yarn for dependency management. The most up-to-date node version required for this project is declared in [.node-version](./front_end/.node-version).
 
-### Backend Pre-requisites
+### Backend Dependencies
+
+If using Docker, steps 1-3 are optional. We recommend installing pre-commit hooks to speed up the development cycle.
 
 1. Install Poetry and Pyenv
 2. Install `pyenv install 3.11.3`
@@ -79,7 +81,7 @@ pre-commit install
 ```
 4. Run `cp .envrc.example .envrc` and update with API secrets
 
-### 🐳 Development Loop
+### 🐳 Docker Development Loop (backend & frontend)
 
 To run in Docker:
 
