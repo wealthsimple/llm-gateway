@@ -15,10 +15,11 @@
     "axios": "^1.4.0",
     "highlight.js": "^11.8.0",
     "markdown-to-jsx": "^7.2.1",
+    "nth-check": "^2.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "typescript": "*",
+    "react-scripts": "^5.0.1",
+    "typescript": "4.7.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -48,6 +49,10 @@
       "last 1 safari version"
     ]
   },
+  "resolutions": {
+    "semver": "^7.5.3",
+    "nth-check": "^2.0.1"
+  },
   "description": "Front-end of LLM-gateway",
   "main": "index.tsx",
   "author": "Data Science & Engineering @ Wealthsimple <data@wealthsimple.com>",
@@ -58,7 +63,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-config-standard-with-typescript": "^35.0.0",
     "eslint-plugin-import": "^2.25.2",
-    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-react": "^7.32.2",
     "prettier": "2.8.8"
