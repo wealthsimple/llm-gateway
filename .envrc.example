@@ -1,0 +1,5 @@
+export OPENAI_API_KEY=
+export COHERE_API_KEY=
+export EXTRA_RUN_OPTIONS=--reload
+
+export DATABASE_URL=postgresql://postgres:postgres@postgres:5432/llm_gateway

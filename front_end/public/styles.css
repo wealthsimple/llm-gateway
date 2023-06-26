@@ -1,0 +1,89 @@
+/* You can add global styles to this file, and also import other style files */
+
+#input-box {
+  resize: vertical;
+}
+
+#send-button {
+  width: 90%;
+  background-color: #486635;
+  color:#E9F5DF
+}
+
+#send-buttons-div {
+  display: flex;
+  justify-content: space-between;
+}
+
+#error-message {
+  color: #A34D12;
+  font-weight: bold;
+}
+
+#message-history-border {
+  border: 1px solid #808080;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+#message-history {
+  overflow-y: scroll;
+  max-height: 60vh;
+  min-height: 30vh;
+}
+
+.message {
+  border-radius: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  max-width: 85%;
+  width: fit-content;
+  list-style-type: none;
+}
+
+.message-user {
+  border: 2px #ECF3D5;
+  border-top-right-radius: 0;
+  margin-left: auto;
+  margin-right: 16px;
+  background-color: #ECF3D5;
+  color: #32302F
+}
+
+.message-assistant {
+  border: 2px #F1F0F0;
+  border-top-left-radius: 0;
+  margin-right: auto;
+  margin-left: 8px;
+  background-color: #F1F0F0;
+  color: #1C1B1B
+}
+
+/* For ol (ordered lists), make sure to retain numbers. Otherwise it defaults
+  to square bullet points: */
+.message ol > li {
+  list-style-type: number;
+}
+
+/* Make browser highlight color more visible against dark mode colors: */
+.message code span::selection {
+  background: #4877a5;
+}
+
+.message code {
+  padding: 0.1rem 0.5rem;
+}
+
+.code-header {
+  padding: 0.1rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  background-color: #FFFFFF;
+}
+
+.clipboard {
+  margin-left: 1rem;
+  cursor: pointer;
+}

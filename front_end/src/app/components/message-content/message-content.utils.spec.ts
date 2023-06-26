@@ -1,0 +1,40 @@
+// *****************************************************************************
+// llm-gateway - A proxy service in front of llm models to encourage the
+// responsible use of AI.
+
+// Copyright 2023 Wealthsimple Technologies
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//   http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// *****************************************************************************
+
+import { isMessageMarkdown } from './message-content.utils';
+
+describe('message-content.utils', () => {
+  describe('isMessageMarkdown', () => {
+    it('should return false if messageContent is empty', () => {
+      expect(isMessageMarkdown('')).toBe(false);
+    });
+
+    it('should return false if messageContent does not contain code or newlines', () => {
+      expect(isMessageMarkdown('hello world')).toBe(false);
+    });
+
+    it('should return true if messageContent contains code', () => {
+      expect(isMessageMarkdown('hello `world`')).toBe(true);
+    });
+
+    it('should return true if messageContent contains newlines', () => {
+      expect(isMessageMarkdown('hello\nworld')).toBe(true);
+    });
+  });
+});
