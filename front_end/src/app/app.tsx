@@ -35,7 +35,7 @@ export function App(): JSX.Element {
           <h1>LLM Gateway</h1>
         </div>
 
-        <p>Welcome to our re-creation of ChatGPT using OpenAI&apos;s APIs.</p>
+        <p>The Portal to Smarter Conversations - Reliably Connect, Track, and Interact with Leading Language Models.</p>
 
         <ChatBoxComponent
           modelName={model}
