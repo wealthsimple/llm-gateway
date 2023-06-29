@@ -26,6 +26,7 @@ import openai
 from llm_gateway.db.models import OpenAIRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
+from llm_gateway.utils.utils import retry
 
 SUPPORTED_OPENAI_ENDPOINTS = {
     "Model": ["list", "retrieve"],
@@ -68,6 +69,7 @@ class OpenAIWrapper:
                 f"`{endpoint}` not supported action for `{module}`"
             )
 
+    @retry(3)
     def _call_model_endpoint(self, endpoint: str, model: Optional[str] = None):
         """
         List or retrieve model(s) from OpenAI
@@ -88,6 +90,7 @@ class OpenAIWrapper:
                 raise Exception("retrieve model needs model name as input")
             return openai.Model.retrieve(model)
 
+    @retry(3)
     def _call_completion_endpoint(
         self, prompt: str, model: str, max_tokens: int, temperature: float, **kwargs
     ):
@@ -113,7 +116,8 @@ class OpenAIWrapper:
             temperature=temperature,
             **kwargs,
         )
-
+    
+    @retry(3)
     def _call_chat_completion_endpoint(
         self, model: str, messages: list, temperature: float = 0
     ):
@@ -134,6 +138,7 @@ class OpenAIWrapper:
             model=model, messages=messages, temperature=temperature
         )
 
+    @retry(3)
     def _call_edits_endpoint(self, model: str, input: str, instruction: str):
         """
         Call the edits endpoint from the OpenAI client and return response
@@ -150,6 +155,7 @@ class OpenAIWrapper:
 
         return openai.Edit.create(model=model, input=input, instruction=instruction)
 
+    @retry(3)
     def _call_embedding_endpoint(self, model: str, texts: List[str]):
         """
         Call the embedding endpoint from the OpenAI client and return response
