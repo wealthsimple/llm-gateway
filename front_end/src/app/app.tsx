@@ -18,7 +18,7 @@
 // *****************************************************************************
 
 import React, { useState } from 'react';
-import { modelChoices, DEFAULT_MODEL_TEMP } from '../constants';
+import { modelChoices, DEFAULT_MODEL_TEMP, APP_DESCRIPTION} from '../constants';
 import { ChatBoxComponent } from './components/ChatBox';
 import { ModelSettingsDialog } from './components/SettingsDialog';
 
@@ -26,6 +26,7 @@ export function App(): JSX.Element {
   const allModelsKeys = Object.keys(modelChoices);
   const [model, setModel] = useState(allModelsKeys[0]);
   const temperature = DEFAULT_MODEL_TEMP;
+  const description = APP_DESCRIPTION;
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -35,7 +36,7 @@ export function App(): JSX.Element {
           <h1>LLM Gateway</h1>
         </div>
 
-        <p>Welcome to our re-creation of ChatGPT using OpenAI&apos;s APIs.</p>
+        <p>{description}</p>
 
         <ChatBoxComponent
           modelName={model}
