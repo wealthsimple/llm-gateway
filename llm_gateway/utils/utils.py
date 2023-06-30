@@ -4,6 +4,7 @@ level = logging.INFO
 logging.basicConfig(level=level)
 logger = logging.getLogger(__name__)
 
+
 def retry(times: int):
     """
     Retry Decorator

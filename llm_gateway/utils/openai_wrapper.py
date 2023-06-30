@@ -116,7 +116,7 @@ class OpenAIWrapper:
             temperature=temperature,
             **kwargs,
         )
-    
+
     @retry(3)
     def _call_chat_completion_endpoint(
         self, model: str, messages: list, temperature: float = 0
