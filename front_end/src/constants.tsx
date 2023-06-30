@@ -84,3 +84,4 @@ export const COMMON_PROGRAMMING_LANGUAGES = [
 ];
 
 export const DEFAULT_MODEL_TEMP = 0;
+export const APP_DESCRIPTION = 'The Portal to Smarter Conversations - Reliably Connect, Track, and Interact with Large Language Models.';
