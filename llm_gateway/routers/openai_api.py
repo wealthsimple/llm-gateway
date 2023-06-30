@@ -24,7 +24,7 @@ from llm_gateway.models import (
     EditInput,
     EmbeddingInput,
 )
-from llm_gateway.wrappers.openai_wrapper import OpenAIWrapper
+from llm_gateway.wrappers.openai import OpenAIWrapper
 
 router = APIRouter()
 

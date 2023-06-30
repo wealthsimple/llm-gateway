@@ -29,7 +29,7 @@ from llm_gateway.pii_scrubber import (
     scrub_postal_codes,
     scrub_sin_numbers,
 )
-from llm_gateway.wrappers.openai_wrapper import OpenAIWrapper
+from llm_gateway.wrappers.openai import OpenAIWrapper
 
 
 @pytest.mark.parametrize(
@@ -163,7 +163,7 @@ def test_scrub_all_wrong_type():
 
 
 @patch("openai.ChatCompletion")
-@patch("llm_gateway.wrappers.openai_wrapper.write_record_to_db")
+@patch("llm_gateway.wrappers.openai.write_record_to_db")
 def test_pii_scrubber_end_to_end(mock_write_record_to_db, mock_openai_module):
     """Make a ChatGPT request with some pii and make sure it gets scrubbed."""
 
