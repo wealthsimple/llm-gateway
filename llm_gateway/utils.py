@@ -5,12 +5,12 @@ logging.basicConfig(level=level)
 logger = logging.getLogger(__name__)
 
 
-def retry(times: int):
+def max_retries(times: int):
     """
-    Retry Decorator
+    Max Retry Decorator
     Retries the wrapped function/method `times` times
-    :param times: The number of times to repeat the wrapped function/method
-    :type times: int times to retry running this
+    :param times: The max number of times to repeat the wrapped function/method
+    :type times: int
     """
 
     def decorator(func):
@@ -21,7 +21,8 @@ def retry(times: int):
                     return func(*args, **kwargs)
                 except Exception as e:
                     logger.error(
-                        f"Exception '{e}' thrown when running '{func}' (attempt {attempt} of {times} times)"
+                        f"Exception '{e}' thrown when running '{func}'"
+                        + f"(attempt {attempt} of {times} times)"
                     )
                     attempt += 1
             return func(*args, **kwargs)
