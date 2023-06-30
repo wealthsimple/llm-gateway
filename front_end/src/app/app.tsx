@@ -29,6 +29,10 @@ export function App(): JSX.Element {
   const description = APP_DESCRIPTION;
   const [showSettings, setShowSettings] = useState(false);
 
+  const clearConversation = () => {
+    localStorage.removeItem('conversation');
+  };
+
   return (
     <>
       <main className="container">
@@ -43,6 +47,8 @@ export function App(): JSX.Element {
           modelTemperature={temperature}
           setShowSettings={setShowSettings}
         />
+
+        <button onClick={clearConversation}>Clear Conversation</button>
 
         <br></br>
 
