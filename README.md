@@ -50,7 +50,7 @@ curl -X 'POST' \
 ### Python Usage
 
 ```python3
-from llm_gateway.wrappers.openai import OpenAIWrapper
+from llm_gateway.providers.openai import OpenAIWrapper
 
 wrapper = OpenAIWrapper()
 wrapper.send_openai_request(
