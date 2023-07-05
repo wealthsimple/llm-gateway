@@ -158,9 +158,11 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
         Press enter to send a message. Press shift+enter to make a multi-line
         message.
       </p>
-      <ClearButton onClear={clearMessages} />
+      <ClearButton
+        onClear={clearMessages}
+      />
       <p>
-        Click to clear conversation history. Refreshing the page will reflect this change.
+        Clears conversation history. Click to confirm.
       </p>
     </div>
   );
