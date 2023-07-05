@@ -19,7 +19,7 @@ from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
 from llm_gateway.models import GenerateInput
-from llm_gateway.utils.cohere_wrapper import CohereWrapper
+from llm_gateway.providers.cohere import CohereWrapper
 
 router = APIRouter()
 
