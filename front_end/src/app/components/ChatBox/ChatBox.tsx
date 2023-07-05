@@ -19,10 +19,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { SendButtonComponent } from './SendButton';
+import { ClearButton } from './ClearButton';
 import { fetchResponseFromModel } from '../../../services/apiService';
 import { Message, Role } from '../../interfaces';
 import { MessageHistoryComponent } from './MessageHistory';
-
 
 interface ChatBoxProps {
   modelName: string;
@@ -102,6 +102,10 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
     saveConversation(messages);
   }, [messages]);
 
+  const clearMessages = () => {
+    setMessages(loadConversation);
+  };
+
   const [isModelLoadingReply, setIsModelLoadingReply] =
     useState<boolean>(false);
   const [readyToSendMessage, setReadyToSendMessage] = useState<boolean>(true);
@@ -153,6 +157,10 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
       <p>
         Press enter to send a message. Press shift+enter to make a multi-line
         message.
+      </p>
+      <ClearButton onClear={clearMessages} />
+      <p>
+        Click to clear conversation history. Refreshing the page will reflect this change.
       </p>
     </div>
   );
