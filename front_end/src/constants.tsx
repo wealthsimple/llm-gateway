@@ -16,7 +16,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
+import { Role } from './app/interfaces';
 import { environment } from './environments/environment';
 
 export interface ModelInfo {
@@ -55,6 +55,14 @@ export const modelChoices: Models = {
       "GPT-4 is OpenAI's most advanced system, producing safer and more useful responses.",
   },
 };
+
+export const CONVERSATION_KEY = 'llm-gateway-conversation';
+
+export const DIALOGUE_DEFAULT_MESSAGE = [
+  { role: Role.assistant, content: 'You are an intelligent assistant.' },
+  { role: Role.user, content: 'Hello!' },
+  { role: Role.assistant, content: 'Hello! How can I assist you today?' },
+];
 
 export const RANDOM_LOADING_PHRASES = [
   '*beep bop, beep bop*',

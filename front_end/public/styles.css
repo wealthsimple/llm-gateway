@@ -110,3 +110,13 @@
 .confirmation-buttons {
   margin-top: 20px;
 }
+
+.green-button {
+  background-color: #486635;
+  color: white;
+}
+
+.red-button {
+  background-color: #a43d12;
+  color: white;
+}

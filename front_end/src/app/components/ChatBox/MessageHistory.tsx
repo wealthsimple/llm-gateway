@@ -41,21 +41,21 @@ export const MessageHistoryComponent: React.FC<Props> = ({
     <div id="message-history-border">
       <div id="message-history">
         <ul>
-        {messages.map((message, index) => (
-          <li
-            key={index}
-            className={`message message-${message.role}`}
-          >
-            {/* Only attempt to format assistant messages which are reliably
-              formatted in valid markdown. Although user input messages may
-              contain markdown occasionally, it is not guaranteed to be in a
-              valid format and may end up rendering badly. */}
-            {message.role === 'assistant' ? (
-              <MessageContent content={message.content} />
-            ) : (
-              message.content
-            )}
-          </li>
+          {messages.map((message) => (
+            <li
+              key={message.role}
+              className={`message message-${message.role}`}
+            >
+              {/* Only attempt to format assistant messages which are reliably
+                formatted in valid markdown. Although user input messages may
+                contain markdown occasionally, it is not guaranteed to be in a
+                valid format and may end up rendering badly. */}
+              {message.role === 'assistant' ? (
+                <MessageContent content={message.content} />
+              ) : (
+                message.content
+              )}
+            </li>
           ))}
           {isLoadingReply && (
             <li aria-busy="true" className={`message message-assistant`}>

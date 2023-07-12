@@ -18,40 +18,46 @@
 // *****************************************************************************
 
 import React, { useState } from 'react';
+import { CONVERSATION_KEY } from '../../../constants';
 
 interface ClearButtonProps {
   onClear: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const ClearButton: React.FC<ClearButtonProps> = ({ onClear }) => {
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
   const clearConversation = () => {
-    localStorage.removeItem('conversation');
+    localStorage.removeItem(CONVERSATION_KEY);
     onClear();
-    setShowConfirmation(false);
+    setShowConfirmationDialog(false);
   };
 
   const openConfirmation = () => {
-    setShowConfirmation(true);
+    setShowConfirmationDialog(true);
   };
 
   const closeConfirmation = () => {
-    setShowConfirmation(false);
+    setShowConfirmationDialog(false);
   };
 
   return (
     <>
       <button onClick={openConfirmation}>Clear Conversation</button>
 
-      {showConfirmation && (
+      {showConfirmationDialog && (
         <div className="confirmation-modal">
           <div className="confirmation-content">
             <h2>Confirmation</h2>
             <p>Are you sure you want to clear the conversation?</p>
             <div className="confirmation-buttons">
-              <button onClick={clearConversation}>Yes</button>
-              <button onClick={closeConfirmation}>No</button>
+              <button className="green-button" onClick={clearConversation}>
+                Yes
+              </button>
+              <button className="red-button" onClick={closeConfirmation}>
+                No
+              </button>
             </div>
           </div>
         </div>
