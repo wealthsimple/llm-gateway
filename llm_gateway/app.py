@@ -15,37 +15,90 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pathlib
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from llm_gateway.routers import cohere_api, openai_api
 
-app = FastAPI()
-app.title = "LLM Proxy"
-app.description = "LLM Proxy Developed by Wealthsimple"
+
+def create_bare_app() -> FastAPI:
+    app = FastAPI()
+    app.title = "LLM Proxy"
+    app.description = "LLM Proxy Developed by Wealthsimple"
+    return app
 
 
-api = FastAPI(openapi_prefix="/api")
-api.include_router(openai_api.router, prefix="/openai")
-api.include_router(cohere_api.router, prefix="/cohere")
+def attach_api_service(app: FastAPI) -> FastAPI:
+    api = FastAPI(openapi_prefix="/api")
+    api.include_router(openai_api.router, prefix="/openai")
+    api.include_router(cohere_api.router, prefix="/cohere")
 
-app.mount("/api", api, name="api")
+    @api.get("/healthcheck")
+    async def healthcheck():
+        """
+        Endpoint to verify that the service is up and running
+        """
+        return {"message": "llm-gateway is healthy"}
 
-# Allow Front-end Origin in local development
-origins = ["http://localhost:3000"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    app.mount("/api", api, name="api")
+    return app
 
 
-@api.get("/healthcheck")
-async def healthcheck():
-    """
-    Endpoint to verify that the service is up and running
-    """
-    return {"message": "llm-gateway is healthy"}
+def attach_middleware(app: FastAPI) -> FastAPI:
+    # Allow Front-end Origin in local development
+    origins = ["http://localhost:3000"]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return app
+
+
+def mount_front_end(app: FastAPI) -> FastAPI:
+    FRONT_END_BUILD_DIRECTORY = (
+        pathlib.Path(__file__).parent.parent / "front_end" / "build"
+    )
+    app.mount(
+        "/assets",
+        StaticFiles(directory=FRONT_END_BUILD_DIRECTORY / "assets"),
+        name="assets",
+    )
+
+    app.mount(
+        "/static",
+        StaticFiles(directory=FRONT_END_BUILD_DIRECTORY / "static"),
+        name="static",
+    )
+
+    app.mount(
+        "/styles",
+        StaticFiles(directory=FRONT_END_BUILD_DIRECTORY / "styles"),
+        name="styles",
+    )
+
+    @app.get("/")
+    async def home() -> HTMLResponse:
+        with open(FRONT_END_BUILD_DIRECTORY / "index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(f.read())
+
+    return app
+
+
+def create_app() -> FastAPI:
+    app = create_bare_app()
+    app = attach_middleware(app)
+    app = mount_front_end(app)
+    app = attach_api_service(app)
+    print("Finished app initialization ")
+    return app
+
+
+app = create_app()
