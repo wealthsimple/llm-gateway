@@ -50,7 +50,7 @@ def attach_api_service(app: FastAPI) -> FastAPI:
 
 def attach_middleware(app: FastAPI) -> FastAPI:
     # Allow Front-end Origin in local development
-    origins = ["http://localhost:3000"]
+    origins = ["http://localhost:3000", "http://localhost:5000"]
 
     app.add_middleware(
         CORSMiddleware,
@@ -97,7 +97,6 @@ def create_app() -> FastAPI:
     app = attach_middleware(app)
     app = mount_front_end(app)
     app = attach_api_service(app)
-    print("Finished app initialization ")
     return app
 
 

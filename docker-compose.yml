@@ -5,7 +5,7 @@ services:
         container_name: llm-gateway-postgres
         hostname: postgres
         ports:
-            - "5430:5432"
+            - "5432:5432"
         environment:
             - POSTGRES_DB=llm_gateway
             - POSTGRES_PASSWORD=postgres

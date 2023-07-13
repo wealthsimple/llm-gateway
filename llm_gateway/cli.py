@@ -24,7 +24,7 @@ def start(
     import uvicorn
 
     host = host or "127.0.0.1"
-    port = 8000 if port is None else port
+    port = 5000 if port is None else port
     uvicorn.run("llm_gateway.app:app", host=host, port=port, log_level="info")
 
 

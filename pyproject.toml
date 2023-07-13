@@ -5,6 +5,16 @@ description = "Service to facilitate access to large language models"
 authors = ["Wealthsimple Data Science & Engineering <data@wealthsimple.com>"]
 license = "Apache-2.0"
 readme = "README.md"
+packages = [
+    { include = "llm_gateway" },
+    { include = "front_end" },
+    { include = "alembic" },
+    { include = "fixtures" }
+]
+exclude = [
+    "front_end/node_modules",
+    "front_end/src"
+]
 
 [tool.poetry.dependencies]
 python = "3.11.*"
@@ -32,3 +42,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.poetry.scripts]
+llm_gateway = "llm_gateway.cli:cli"
