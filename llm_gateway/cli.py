@@ -1,12 +1,25 @@
+from typing import Optional
+
 import click
 
 
+def _llm_gateway_version() -> str:
+    try:
+        import pkg_resources
+
+        return pkg_resources.get_distribution("llm-gateway").version
+    except ImportError:
+        return "0.0.0"
+
+
 @click.group(no_args_is_help=True)
+@click.version_option(version=_llm_gateway_version(), message="%(version)s")
 def cli():
+    """LLM-Gateway command line tool"""
     pass
 
 
-@cli.command("start")
+@cli.command("up")
 @click.option(
     "--host",
     type=str,
@@ -17,10 +30,11 @@ def cli():
     type=int,
     help="Start the app at this port. Default: 5000",
 )
-def start(
-    host=None,
-    port=None,
-):
+def up(
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+) -> None:
+    """Start LLM-Gateway Services"""
     import uvicorn
 
     host = host or "127.0.0.1"
