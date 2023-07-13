@@ -35,7 +35,9 @@ jobs:
           flake8 llm_gateway
 
       - name: Run Python Test Suite
-        run: poetry run pytest
+        run: |
+          cp .envrc.example .envrc
+          poetry run pytest
 
   frontend_tests:
     name: Tests & Lints LLM Gateway Frontend

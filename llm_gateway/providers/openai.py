@@ -18,11 +18,11 @@
 
 import datetime
 import json
-import os
 from typing import List, Optional
 
 import openai
 
+from llm_gateway.config import get_settings
 from llm_gateway.db.models import OpenAIRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
@@ -36,6 +36,8 @@ SUPPORTED_OPENAI_ENDPOINTS = {
     "Embedding": ["create"],
 }
 
+settings = get_settings()
+
 
 class OpenAIWrapper:
     """
@@ -46,7 +48,7 @@ class OpenAIWrapper:
 
     def __init__(self) -> None:
         if not openai.api_key:
-            openai.api_key = os.getenv("OPENAI_API_KEY")
+            openai.api_key = settings.OPENAI_API_KEY
 
     def _validate_openai_endpoint(self, module: str, endpoint: str) -> None:
         """

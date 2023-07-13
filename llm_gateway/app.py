@@ -18,34 +18,42 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from llm_gateway.routers import cohere_api, openai_api
+from llm_gateway.config import get_settings
+from llm_gateway.routers.api import api_router
 
-app = FastAPI()
-app.title = "LLM Proxy"
-app.description = "LLM Proxy Developed by Wealthsimple"
-
-
-api = FastAPI(openapi_prefix="/api")
-api.include_router(openai_api.router, prefix="/openai")
-api.include_router(cohere_api.router, prefix="/cohere")
-
-app.mount("/api", api, name="api")
-
-# Allow Front-end Origin in local development
-origins = ["http://localhost:3000"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+settings = get_settings()
 
 
-@api.get("/healthcheck")
-async def healthcheck():
-    """
-    Endpoint to verify that the service is up and running
-    """
-    return {"message": "llm-gateway is healthy"}
+def create_bare_app():
+    app = FastAPI(title=settings.APP_TITLE)
+    app.description = settings.APP_DESCRIPTION
+    return app
+
+
+def attach_cors_middleware(app: FastAPI) -> FastAPI:
+    # Allow Front-end Origin in local development
+    origins = ["http://localhost:3000"]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return app
+
+
+def attach_api_routes(app: FastAPI) -> FastAPI:
+    app.include_router(api_router, prefix=settings.API_PREFIX)
+    return app
+
+
+def create_app() -> FastAPI:
+    app = create_bare_app()
+    app = attach_cors_middleware(app)
+    app = attach_api_routes(app)
+    return app
+
+
+app = create_app()

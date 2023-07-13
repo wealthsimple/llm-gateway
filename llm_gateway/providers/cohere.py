@@ -17,16 +17,17 @@
 
 import datetime
 import json
-import os
 from typing import Optional
 
 import cohere
 
+from llm_gateway.config import get_settings
 from llm_gateway.db.models import CohereRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
 
 SUPPORTED_COHERE_ENDPOINTS = ["generate"]
+settings = get_settings()
 
 
 class CohereWrapper:
@@ -37,7 +38,7 @@ class CohereWrapper:
     """
 
     def __init__(self) -> None:
-        self.cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
+        self.cohere_client = cohere.Client(settings.COHERE_API_KEY)
 
     def _validate_cohere_endpoint(self, endpoint: str) -> None:
         """
