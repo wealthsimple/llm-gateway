@@ -10,12 +10,12 @@ def cli():
 @click.option(
     "--host",
     type=str,
-    help="Bind socket to this host. Default: 127.0.0.1",
+    help="Start the app at this host. Default: 127.0.0.1",
 )
 @click.option(
     "--port",
     type=int,
-    help="Bind socket to this port. Default: 8000",
+    help="Start the app at this port. Default: 5000",
 )
 def start(
     host=None,

@@ -11,10 +11,7 @@ packages = [
     { include = "alembic" },
     { include = "fixtures" }
 ]
-exclude = [
-    "front_end/node_modules",
-    "front_end/src"
-]
+exclude = ["front_end/src"]
 
 [tool.poetry.dependencies]
 python = "3.11.*"
