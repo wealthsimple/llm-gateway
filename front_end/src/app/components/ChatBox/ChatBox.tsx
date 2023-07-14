@@ -17,10 +17,12 @@
 // limitations under the License.
 // *****************************************************************************
 
-import React, { useState } from 'react';
-import { SendButtonComponent } from './SendButton';
+import React, { useState, useEffect } from 'react';
 import { fetchResponseFromModel } from '../../../services/apiService';
+import { CONVERSATION_KEY, DIALOGUE_DEFAULT_MESSAGE } from '../../../constants';
 import { Message, Role } from '../../interfaces';
+import { SendButtonComponent } from './SendButton';
+import { ClearButton } from './ClearButton';
 import { MessageHistoryComponent } from './MessageHistory';
 
 interface ChatBoxProps {
@@ -58,7 +60,6 @@ const sendMessage = (
   // add user's message to history
   const newMessageHistory = [...messages, message];
   setMessages(newMessageHistory);
-
   fetchResponseFromModel(model, newMessageHistory, temperature)
     .then((resContent) => {
       setMessages([
@@ -75,17 +76,32 @@ const sendMessage = (
       setIsLoadingReply(false);
     });
 };
+const saveConversation = (conversation: Message[]) => {
+  const conversationJson = JSON.stringify(conversation);
+  localStorage.setItem(CONVERSATION_KEY, conversationJson);
+};
 
+const loadConversation = (): Message[] => {
+  const conversationJson = localStorage.getItem(CONVERSATION_KEY);
+  if (conversationJson) {
+    return JSON.parse(conversationJson);
+  }
+  return DIALOGUE_DEFAULT_MESSAGE;
+};
 export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
   modelName,
   modelTemperature,
   setShowSettings,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: Role.assistant, content: 'You are an intelligent assistant.' },
-    { role: Role.user, content: 'Hello!' },
-    { role: Role.assistant, content: 'Hello! How can I assist you today?' },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(loadConversation());
+
+  useEffect(() => {
+    saveConversation(messages);
+  }, [messages]);
+
+  const clearMessages = () => {
+    setMessages(loadConversation);
+  };
 
   const [isModelLoadingReply, setIsModelLoadingReply] =
     useState<boolean>(false);
@@ -138,6 +154,12 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
       <p>
         Press enter to send a message. Press shift+enter to make a multi-line
         message.
+      </p>
+      <ClearButton
+        onClear={clearMessages}
+      />
+      <p>
+        Clears conversation history. Click to confirm.
       </p>
     </div>
   );
