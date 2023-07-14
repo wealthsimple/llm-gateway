@@ -6,7 +6,7 @@ Wealthsimple secures our code base using a combination of code review, dependenc
 
 For general defects about this project, please file a [Bug Report](https://github.com/wealthsimple/llm-gateway/issues/new/choose)
 
-To report a vulnerability about this project please [Report a security vulnerability](https://github.com/wealthsimple/llm-gateway/issues/new/choose)
+To report a vulnerability about this project please [Report a security vulnerability](https://github.com/wealthsimple/llm-gateway/security/advisories/new)
 
 If you have a vulnerability to report about the Wealthsimple platform, please use our white hat bug bounty program at [Hackerone](https://hackerone.com/wealthsimple)
 
