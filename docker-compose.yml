@@ -10,13 +10,23 @@ services:
             - POSTGRES_DB=llm_gateway
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_USER=postgres
-        volumes:
-            - ./mock-data/init.sql:/docker-entrypoint-initdb.d/init.sql
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U postgres"]
             interval: 5s
             timeout: 5s
             retries: 5
+
+    migration:
+        image: llm-gateway-backend
+        env_file:
+            - .envrc
+        command: bash -c "alembic upgrade head"
+        depends_on:
+            postgres:
+                condition: service_healthy
+        volumes:
+            # This is already copied into the image, but we always need the latest contents of this directory
+            - ./alembic/:/usr/src/app/alembic/
 
     llm_gateway_backend:
         image: llm-gateway-backend
@@ -37,6 +47,8 @@ services:
         depends_on:
             postgres:
                 condition: service_healthy
+            migration:
+                condition: service_completed_successfully
         healthcheck:
             test: [ "CMD", "curl", "-f", "127.0.0.1:5000/api/healthcheck" ]
             interval: 10s
