@@ -31,6 +31,7 @@ class OpenAIRequests(Base):
     temperature = Column(Float, nullable=True)
     created_at = Column(DateTime, nullable=False)
     openai_endpoint = Column(String, nullable=False)
+    extras = Column(JSON, nullable=True)
 
 
 class CohereRequests(Base):

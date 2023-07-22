@@ -49,6 +49,7 @@ def get_completion(user_input: CompletionInput) -> JSONResponse:
             prompt=user_input.prompt,
             temperature=user_input.temperature,
             model=user_input.model,
+            **user_input.model_kwargs
         )
     )
 
@@ -72,6 +73,7 @@ def get_chat_completion(user_input: ChatCompletionInput) -> JSONResponse:
             messages=user_input.messages,
             temperature=user_input.temperature,
             model=user_input.model,
+            **user_input.model_kwargs
         )
     )
 
