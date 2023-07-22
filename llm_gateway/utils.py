@@ -6,7 +6,7 @@ logging.basicConfig(level=level)
 logger = logging.getLogger(__name__)
 
 
-def max_retries(times: int, exceptions: list = [Exceptions]):
+def max_retries(times: int, exceptions: list = [Exception]):
     """
     Max Retry Decorator
     Retries the wrapped function/method `times` times
