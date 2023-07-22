@@ -20,13 +20,10 @@ services:
         image: llm-gateway-backend
         env_file:
             - .envrc
-        command: bash -c "alembic upgrade head"
+        command: alembic upgrade head
         depends_on:
             postgres:
                 condition: service_healthy
-        volumes:
-            # This is already copied into the image, but we always need the latest contents of this directory
-            - ./alembic/:/usr/src/app/alembic/
 
     llm_gateway_backend:
         image: llm-gateway-backend
