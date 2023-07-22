@@ -1,16 +1,12 @@
 import logging
 
-from openai.error import Timeout, APIError, APIConnectionError, RateLimitError
 
 level = logging.INFO
 logging.basicConfig(level=level)
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_EXCEPTIONS = [Timeout, APIError, APIConnectionError, RateLimitError]
-
-
-def max_retries(times: int, exceptions: list = DEFAULT_EXCEPTIONS):
+def max_retries(times: int, exceptions: list = [Exceptions]):
     """
     Max Retry Decorator
     Retries the wrapped function/method `times` times
