@@ -28,6 +28,9 @@ from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
 from llm_gateway.utils import max_retries
 
+from openai.error import Timeout, APIError, APIConnectionError, TryAgain
+
+OPENAI_EXCEPTIONS = [Timeout, APIError, APIConnectionError, TryAgain]
 SUPPORTED_OPENAI_ENDPOINTS = {
     "Model": ["list", "retrieve"],
     "ChatCompletion": ["create"],
@@ -69,7 +72,7 @@ class OpenAIWrapper:
                 f"`{endpoint}` not supported action for `{module}`"
             )
 
-    @max_retries(3)
+    @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_model_endpoint(self, endpoint: str, model: Optional[str] = None):
         """
         List or retrieve model(s) from OpenAI
@@ -90,7 +93,7 @@ class OpenAIWrapper:
                 raise Exception("retrieve model needs model name as input")
             return openai.Model.retrieve(model)
 
-    @max_retries(3)
+    @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_completion_endpoint(
         self,
         prompt: str,
@@ -124,7 +127,7 @@ class OpenAIWrapper:
             **kwargs,
         )
 
-    @max_retries(3)
+    @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_chat_completion_endpoint(
         self, model: str, messages: list, temperature: Optional[float] = 0, **kwargs
     ):
@@ -147,7 +150,7 @@ class OpenAIWrapper:
             model=model, messages=messages, temperature=temperature, **kwargs
         )
 
-    @max_retries(3)
+    @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_edits_endpoint(self, model: str, input: str, instruction: str):
         """
         Call the edits endpoint from the OpenAI client and return response
@@ -164,7 +167,7 @@ class OpenAIWrapper:
 
         return openai.Edit.create(model=model, input=input, instruction=instruction)
 
-    @max_retries(3)
+    @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_embedding_endpoint(self, model: str, texts: List[str]):
         """
         Call the embedding endpoint from the OpenAI client and return response

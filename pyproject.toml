@@ -2,7 +2,7 @@
 name = "llm-gateway"
 version = "0.1.0"
 description = "Service to facilitate access to large language models"
-authors = ["Data Science & Engineering @ Wealthsimple <data@wealthsimple.com>"]
+authors = ["Data Science & Engineering at Wealthsimple <data@wealthsimple.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 
