@@ -1,6 +1,5 @@
 import logging
 
-
 level = logging.INFO
 logging.basicConfig(level=level)
 logger = logging.getLogger(__name__)
@@ -13,7 +12,7 @@ def max_retries(times: int, exceptions: list = [Exception]):
     :param times: The max number of times to repeat the wrapped function/method
     :type times: int
     :param Exceptions: Lists of exceptions that trigger a retry attempt
-    :type Exceptions: List of Exceptions    
+    :type Exceptions: List of Exceptions
     """
 
     def decorator(func):
