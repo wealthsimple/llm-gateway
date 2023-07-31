@@ -4,8 +4,9 @@ metadata:
   name: llm-gateway
   description: Gateway for secure & reliable communications with OpenAI and other LLM providers
   tags:
+    - machine-learning
+    - open-source    
     - python
-    - open-source
 spec:
   type: website
   lifecycle: production
