@@ -32,6 +32,7 @@ class CompletionInput(BaseModel):
     prompt: str
     max_tokens: int = 50
     model: str = "text-davinci-003"
+    model_kwargs: dict = {}
 
 
 class ChatCompletionInput(BaseModel):
@@ -40,6 +41,7 @@ class ChatCompletionInput(BaseModel):
     ]
     model: str = "gpt-3.5-turbo"
     temperature: float = 0
+    model_kwargs: dict = {}
 
 
 class EditInput(BaseModel):

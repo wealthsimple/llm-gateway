@@ -95,7 +95,12 @@ class OpenAIWrapper:
 
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_completion_endpoint(
-        self, prompt: str, model: str, max_tokens: int, temperature: float, **kwargs
+        self,
+        prompt: str,
+        model: str,
+        max_tokens: int,
+        temperature: Optional[float] = 0,
+        **kwargs,
     ):
         """
         Call the completion endpoint from the OpenAI client and return response
@@ -107,7 +112,9 @@ class OpenAIWrapper:
         :param max_tokens: Maximum tokens for prompt and completion
         :type max_tokens: int
         :param temperature: Temperature altering the creativity of the response
-        :type temperature: float
+        :type temperature: float, optional
+        :param kwargs: Other parameters to pass to openai api (i.e. functions, etc.)
+        :type kwargs: dict, optional
         :return: Response from OpenAI
         :rtype: _type_
         """
@@ -122,7 +129,7 @@ class OpenAIWrapper:
 
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_chat_completion_endpoint(
-        self, model: str, messages: list, temperature: float = 0
+        self, model: str, messages: list, temperature: Optional[float] = 0, **kwargs
     ):
         """
         Call the chat completion endpoint from the OpenAI client and return response
@@ -133,12 +140,14 @@ class OpenAIWrapper:
         :type messages: list
         :param temperature: Temperature altering the creativity of the response, defaults to 0
         :type temperature: float, optional
+        :param kwargs: Other parameters to pass to openai api (i.e. functions, etc.)
+        :type kwargs: dict, optional
         :return: Response from OpenAI
         :rtype: _type_
         """
 
         return openai.ChatCompletion.create(
-            model=model, messages=messages, temperature=temperature
+            model=model, messages=messages, temperature=temperature, **kwargs
         )
 
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
@@ -206,19 +215,21 @@ class OpenAIWrapper:
         :param endpoint: Valid OpenAI endpoint to hit (i.e. "create")
         :type endpoint: str
         :param model: Model to hit, defaults to None
-        :type model: Optional[str], optional
+        :type model: str, optional
         :param max_tokens: Maximum tokens for prompt and completion, defaults to None
-        :type max_tokens: Optional[int], optional
+        :type max_tokens: int, optional
         :param prompt: _description_, defaults to None
         :type prompt: String prompt, if calling completion or edits, optional
         :param temperature: Temperature altering the creativity of the response, defaults to 0
-        :type temperature: Optional[float], optional
+        :type temperature: float, optional
         :param messages: List of prior messages, if calling chat completion, defaults to None
-        :type messages: Optional[list], optional
+        :type messages: list, optional
         :param instruction: How to perform edits, if calling edits, defaults to None
-        :type instruction: Optional[str], optional
+        :type instruction: str, optional
         :param embedding_texts: List of prompts, if calling embedding, defaults to None
-        :type embedding_texts: Optional[list], optional
+        :type embedding_texts: list, optional
+        :param kwargs: Other parameters to pass to openai api (i.e. functions, etc.)
+        :type kwargs: Optional[dict]
         :return: Flattened response from OpenAI
         :rtype: _type_
         """
@@ -244,7 +255,9 @@ class OpenAIWrapper:
             )
             user_input = prompt
         elif openai_module == "ChatCompletion":
-            result = self._call_chat_completion_endpoint(model, messages, temperature)
+            result = self._call_chat_completion_endpoint(
+                model, messages, temperature, **kwargs
+            )
             messages.append(
                 {
                     "user": "assistant",
@@ -270,6 +283,7 @@ class OpenAIWrapper:
                     "openai_model": model,
                     "temperature": temperature,
                     "openai_endpoint": openai_module,
+                    "extras": json.dumps(kwargs),
                     "created_at": datetime.datetime.now(),
                 }
             )
