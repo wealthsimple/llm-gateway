@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: llm-gateway
+  description: Gateway for secure & reliable communications with OpenAI and other LLM providers
+  tags:
+    - machine-learning
+    - open-source    
+    - python
+spec:
+  type: website
+  lifecycle: production
