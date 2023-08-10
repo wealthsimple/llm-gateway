@@ -74,7 +74,7 @@ If using Docker, steps 1-3 are optional. We recommend installing pre-commit hook
 
 1. Install Poetry and Pyenv
 2. Install `pyenv install 3.11.3`
-3. Install project requirments
+3. Install project requirements
 ```
 brew install gitleaks
 poetry install
