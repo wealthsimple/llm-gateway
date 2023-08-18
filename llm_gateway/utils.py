@@ -21,7 +21,9 @@ def max_retries(times: int, exceptions: list = [Exception]):
             while attempt < times:
                 try:
                     return func(*args, **kwargs)
-                except exceptions as e:
+                except Exception as e:
+                    if type(e) not in exceptions:
+                        raise e
                     logger.error(
                         f"Exception '{e}' thrown when running '{func}'"
                         + f"(attempt {attempt} of {times} times)"
