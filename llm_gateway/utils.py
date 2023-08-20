@@ -5,7 +5,7 @@ logging.basicConfig(level=level)
 logger = logging.getLogger(__name__)
 
 
-def max_retries(times: int, exceptions: list = [Exception]):
+def max_retries(times: int, exceptions: tuple = (Exception)):
     """
     Max Retry Decorator
     Retries the wrapped function/method `times` times
@@ -21,9 +21,7 @@ def max_retries(times: int, exceptions: list = [Exception]):
             while attempt < times:
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
-                    if type(e) not in exceptions:
-                        raise e
+                except exceptions as e:
                     logger.error(
                         f"Exception '{e}' thrown when running '{func}'"
                         + f"(attempt {attempt} of {times} times)"
