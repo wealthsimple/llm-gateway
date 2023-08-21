@@ -41,6 +41,7 @@
   max-width: 85%;
   width: fit-content;
   list-style-type: none;
+  white-space: pre-wrap;
 }
 
 .message-user {
