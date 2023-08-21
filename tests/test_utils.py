@@ -11,15 +11,15 @@ def test_retry_decorator():
 
     ## Mismatch retry exception
     @max_retries(1, exceptions=(ValueError))
-    def normal_exception():
+    def mismatch_exception():
         return retry_mock()
 
     ## Matching retry exception
     @max_retries(1, exceptions=(APIError))
-    def openai_exception():
+    def matching_exception():
         return retry_mock()
     
     with pytest.raises(APIError):
-        normal_exception()
+        mismatch_exception()
 
-    assert openai_exception() == "success"
+    assert matching_exception() == "success"
