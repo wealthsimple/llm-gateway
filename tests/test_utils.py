@@ -10,12 +10,12 @@ def test_retry_decorator():
     retry_mock.side_effect = [APIError("test"), "success"]
 
     ## Mismatch retry exception
-    @max_retries(1, exceptions=(ValueError))
+    @max_retries(1, exceptions=(ValueError,))
     def mismatch_exception():
         return retry_mock()
 
     ## Matching retry exception
-    @max_retries(1, exceptions=(APIError))
+    @max_retries(1, exceptions=(APIError,))
     def matching_exception():
         return retry_mock()
     
