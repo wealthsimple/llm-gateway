@@ -30,7 +30,7 @@ from llm_gateway.utils import max_retries
 
 from openai.error import Timeout, APIError, APIConnectionError, TryAgain
 
-OPENAI_EXCEPTIONS = [Timeout, APIError, APIConnectionError, TryAgain]
+OPENAI_EXCEPTIONS = (Timeout, APIError, APIConnectionError, TryAgain)
 SUPPORTED_OPENAI_ENDPOINTS = {
     "Model": ["list", "retrieve"],
     "ChatCompletion": ["create"],
