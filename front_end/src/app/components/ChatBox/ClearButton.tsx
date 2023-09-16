@@ -48,7 +48,7 @@ export const ClearButton: React.FC<ClearButtonProps> = ({ onClear }) => {
 
       {showConfirmationDialog && (
         <div className="confirmation-modal">
-          <div className="confirmation-content">
+          <article className="confirmation-content">
             <h2>Confirmation</h2>
             <p>Are you sure you want to clear the conversation?</p>
             <div className="confirmation-buttons">
@@ -59,7 +59,7 @@ export const ClearButton: React.FC<ClearButtonProps> = ({ onClear }) => {
                 No
               </button>
             </div>
-          </div>
+          </article>
         </div>
       )}
     </>
