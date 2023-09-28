@@ -59,6 +59,9 @@
   margin-right: auto;
   margin-left: 8px;
   background-color: #f1f0f0;
+}
+
+.message p, li {
   color: #1c1b1b;
 }
 
@@ -102,7 +105,6 @@
 }
 
 .confirmation-content {
-  background-color: #fff;
   padding: 20px;
   border-radius: 5px;
   text-align: center;
