@@ -43,10 +43,10 @@ export async function fetchResponseFromModel(
     return res.data.choices[0].message.content;
   } catch (error) {
     const err = error as AxiosError;
-    const errResponse = err.response as AxiosResponse;
+    const errRes = err.response as AxiosResponse;
 
-    if (err.message && errResponse) {
-      throw new Error(`${err.message}: ${errResponse.data.error.message}`);
+    if (err.message && errRes.data.error) {
+      throw new Error(`${err.message}: ${errRes.data.error}`);
     }
     if (err.message) {
       throw new Error(`${err.message}`);

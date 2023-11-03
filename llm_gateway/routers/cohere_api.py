@@ -18,10 +18,11 @@
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
+from llm_gateway.exceptions import CohereRouteExceptionHandler
 from llm_gateway.models import GenerateInput
 from llm_gateway.providers.cohere import CohereWrapper
 
-router = APIRouter()
+router = APIRouter(route_class=CohereRouteExceptionHandler)
 
 
 @router.post("/generate")
