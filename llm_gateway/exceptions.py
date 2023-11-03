@@ -32,7 +32,7 @@ class OpenAIRouteExceptionHandler(APIRoute):
             try:
                 response = await original_route_handler(request)
             except OPENAI_EXCEPTIONS as e:
-                # print the exception to the console
+                # print exception traceback to console
                 print_exception(type(e), e, e.__traceback__)
                 response = JSONResponse(status_code=500, content={"error": str(e)})
             return response
@@ -62,7 +62,7 @@ class CohereRouteExceptionHandler(APIRoute):
             try:
                 response = await original_route_handler(request)
             except COHERE_EXCEPTIONS as e:
-                # print the exception to the console
+                # print exception traceback to console
                 print_exception(type(e), e, e.__traceback__)
                 response = JSONResponse(status_code=500, content={"error": str(e)})
             return response
