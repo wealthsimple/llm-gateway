@@ -1,5 +1,5 @@
 ARG BASE_LAYER=base
-FROM python:3.11.3-slim-buster1 as base
+FROM python:3.11.3-slim-buster as base
 LABEL maintainer="Data Science & Engineering @ Wealthsimple <data@wealthsimple.com>"
 
 ##############################################
@@ -14,21 +14,20 @@ FROM python:3.11-bullseye as base-dev
 
 ##############################################
 
-FROM $BASE_LAYER as builder
-
-RUN pip install poetry==1.3.2
+FROM $BASE_LAYER as backend-builder
 
 WORKDIR /usr/src/app
-
-RUN poetry config virtualenvs.in-project true
-RUN poetry config virtualenvs.create false --local
+RUN pip install poetry==1.3.2
 
 # Copy pyproject and lock files first. This allows us to cache
 # dependencies even when source files are changed.
 COPY --chown=nobody:nogroup poetry.lock pyproject.toml ./
 
 # Install dependencies.
-RUN poetry install --only main --no-interaction --no-root
+ENV PATH="${PATH}:/root/.local/share/pypoetry/venv/bin"
+RUN poetry config virtualenvs.create false
+RUN poetry config installer.max-workers 2
+RUN poetry install --no-interaction --no-root
 
 # Copy remaining files, except those listed in .dockerignore
 # This step is almost guaranteed to bust cache, so don't put anything heavy beyond this point.
@@ -39,22 +38,22 @@ COPY --chown=nobody:nogroup ./alembic/ ./alembic/
 
 ##############################################
 
-FROM builder as test-suite
+FROM node:16.13.1 as frontend-builder
+WORKDIR /usr/src/app
 
-RUN poetry install --no-interaction --no-root
+# Install dependencies
+COPY front_end/package.json front_end/yarn.lock front_end/.eslintrc.json front_end/tsconfig.json ./
+RUN yarn install
 
-# when running poetry without venvs, it fails to install the llm_gateway package
-RUN pip install -e .
-
-COPY --chown=nobody:nogroup ./tests/ ./tests/
-
-CMD ["pytest"]
+COPY ./front_end ./
+RUN yarn build
 
 ##############################################
 
-FROM builder as application
+FROM nginx:1.19.2-alpine as application
 
-# fastapi server port
-EXPOSE 5000 5000
+COPY --from=frontend-builder /usr/src/app/build/ /usr/share/nginx/html/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-CMD ["uvicorn", "--host", "0.0.0.0","--port", "5000", "llm_gateway.app:app"]
+EXPOSE 80
+

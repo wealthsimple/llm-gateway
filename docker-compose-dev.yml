@@ -1,0 +1,62 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:13.3
+    container_name: llm-gateway-postgres
+    hostname: postgres
+    ports:
+        - "5430:5432"
+    environment:
+        - POSTGRES_DB=llm_gateway
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_USER=postgres
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    env_file:
+        - .envrc
+    command: alembic upgrade head
+    depends_on:
+      postgres:
+          condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    env_file:
+      - .envrc
+    command: uvicorn --host 0.0.0.0 --port 5000 llm_gateway.app:app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "127.0.0.1:5000/api/healthcheck" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '5000:5000'
+
+  front-end:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-builder
+    command: yarn start
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./front_end/src:/usr/src/app/src
+      - ./front_end/public:/usr/src/app/public
