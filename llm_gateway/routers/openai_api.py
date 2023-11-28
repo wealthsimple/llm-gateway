@@ -18,6 +18,7 @@
 from fastapi import APIRouter
 from starlette.responses import JSONResponse
 
+from llm_gateway.exceptions import OpenAIRouteExceptionHandler
 from llm_gateway.models import (
     ChatCompletionInput,
     CompletionInput,
@@ -26,7 +27,7 @@ from llm_gateway.models import (
 )
 from llm_gateway.providers.openai import OpenAIWrapper
 
-router = APIRouter()
+router = APIRouter(route_class=OpenAIRouteExceptionHandler)
 
 
 @router.post("/completion")

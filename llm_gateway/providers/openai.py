@@ -22,15 +22,14 @@ import os
 from typing import List, Optional
 
 import openai
+from openai.error import APIConnectionError, APIError, RateLimitError, Timeout, TryAgain
 
 from llm_gateway.db.models import OpenAIRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
 from llm_gateway.utils import max_retries
 
-from openai.error import Timeout, APIError, APIConnectionError, TryAgain
-
-OPENAI_EXCEPTIONS = (Timeout, APIError, APIConnectionError, TryAgain)
+OPENAI_EXCEPTIONS = (Timeout, APIError, APIConnectionError, TryAgain, RateLimitError)
 SUPPORTED_OPENAI_ENDPOINTS = {
     "Model": ["list", "retrieve"],
     "ChatCompletion": ["create"],
