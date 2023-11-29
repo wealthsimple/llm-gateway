@@ -17,54 +17,148 @@
 // limitations under the License.
 // *****************************************************************************
 
-import React from 'react';
-import { modelChoices } from '../../../constants';
+import React, { useState } from 'react';
+import { DEFAULT_SETTINGS, modelChoices } from '../../../constants';
 
 interface Props {
-  model: string;
-  setModel: (arg: string) => void;
   showSettings: boolean;
   setShowSettings: (arg: boolean) => void;
+  createNewConversation: (title: string, model: string) => void;
 }
 
 export const ModelSettingsDialog: React.FC<Props> = ({
-  model,
-  setModel,
   showSettings,
   setShowSettings,
+  createNewConversation,
 }) => {
-  const triggerChangeModel = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newModel = event.target.value;
-    setModel(newModel);
+  const [selectedOption, setSelectedOption] = useState(DEFAULT_SETTINGS.model);
+  const [newTitle, setNewTitle] = useState('');
+
+  const createConversation = () => {
+    const title = newTitle.trim();
+    if (!title) {
+      alert("Chat title can't be empty!");
+      return;
+    }
+    createNewConversation(title, selectedOption);
+    closeModal();
   };
+
+  const triggerChangeModel = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSelection = event.target.value;
+    setSelectedOption(newSelection);
+  };
+
+  const closeModal = () => {
+    setShowSettings(false);
+    setNewTitle('');
+    setSelectedOption(DEFAULT_SETTINGS.model);
+  };
+
   return (
     <dialog open={showSettings}>
       <article>
-        <header>
-          <a
-            href="#close"
-            aria-label="Close"
-            className="close"
-            onClick={() => setShowSettings(false)}
-          ></a>
-          Settings
-        </header>
-
+        <div className="settings-dialog-title">
+          <h3>Create New Chat</h3>
+        </div>
+        <div>
+          <input
+            type="text"
+            value={newTitle}
+            placeholder="Chat Title"
+            onChange={(e) => setNewTitle(e.target.value)}
+          />
+        </div>
         <div id="model-selector">
-          Model
           <select
             name="selectList"
             id="selectList"
             onChange={triggerChangeModel}
-            value={model}
+            value={selectedOption}
+            className="dropdown"
           >
-            {Object.entries(modelChoices).map(([key, value]) => (
-              <option key={key} value={key}>
-                {value.name}
-              </option>
-            ))}
+            <optgroup label="Self Hosted Models (Secured)">
+              {Object.entries(modelChoices).map(
+                ([key, value]) =>
+                  value.isSecureModel && (
+                    <option key={key} value={key}>
+                      {value.name}
+                    </option>
+                  ),
+              )}
+            </optgroup>
+            <optgroup label="Public Models">
+              {Object.entries(modelChoices).map(
+                ([key, value]) =>
+                  !value.isSecureModel && (
+                    <option key={key} value={key}>
+                      {value.name}
+                    </option>
+                  ),
+              )}
+            </optgroup>
           </select>
         </div>
+        <p>{modelChoices[selectedOption].description}</p>
+        <p>
+          <details open>
+            <summary>Basic Information</summary>
+            <ul id="hello">
+              <li>
+                <b>
+                  <span role="img" aria-label="plug">
+                    🔌
+                  </span>{' '}
+                  Provider:{' '}
+                </b>{' '}
+                {modelChoices[selectedOption].distributor} <br />
+              </li>
+              <li>
+                <b>
+                  <span role="img" aria-label="blink">
+                    ❇️
+                  </span>{' '}
+                  Max Tokens:{' '}
+                </b>
+                {modelChoices[selectedOption].maxTokensLimit} tokens <br />
+              </li>
+            </ul>
+          </details>
+          <details>
+            <summary>Advanced Information</summary>
+            <ul>
+              {Object.entries(modelChoices[selectedOption].advanceMetadata).map(
+                ([key, value]) => (
+                  <li key={key}>
+                    {' '}
+                    <b>{key}:</b> {value}{' '}
+                  </li>
+                ),
+              )}
+            </ul>
+          </details>
+          <br />
+        </p>
+        <footer>
+          <a
+            href="#cancel"
+            role="button"
+            className="secondary-btn"
+            onClick={() => closeModal()}
+          >
+            Cancel
+          </a>
+          <a
+            href="#confirm"
+            role="button"
+            className="primary-btn"
+            onClick={() => {
+              createConversation();
+            }}
+          >
+            Create Chat
+          </a>
+        </footer>
       </article>
     </dialog>
   );

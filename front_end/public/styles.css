@@ -1,86 +1,324 @@
-/* You can add global styles to this file, and also import other style files */
-
-#input-box {
-  resize: vertical;
+/* Referenced from Wealthsimple's style guide */
+:root {
+  --slate-element-bg: #1c1c1b;
+  --soft-bg: #f1f0f0;
+  --bg-soft: #f4eff5;
+  --fg-strong: #804b83;
+  --sky-bg-soft: #ecf2f6;
+  --sky-fg-strong: #456274;
+  --positive-bg-strong: #486635;
+  --positive-bg-soft: #e9f5df;
+  --negative-fg-strong: #a43d12;
+  --outline: #e4e2e1;
 }
 
-#send-button {
-  width: 90%;
-  background-color: #486635;
-  color: #e9f5df;
+.container {
+  min-width: 50%;
 }
 
-#send-buttons-div {
+.primary-btn {
+  background-color: var(--sky-fg-strong);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px;
+}
+
+.secondary-btn {
+  background-color: white;
+  color: var(--sky-fg-strong);
+  border: 1.5px solid var(--sky-fg-strong);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px;
+}
+
+/* Styling for main app container */
+
+.container .title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--slate-element-bg);
+  margin: 0;
+}
+
+.waiting {
+  cursor: wait !important;
+}
+
+.cursor-disable {
+  pointer-events: none;
+}
+
+.container article.appDescription {
+  box-shadow: none;
+  margin: 20px 0px 32px 0px;
+  padding: 0;
+}
+
+.appDescription p {
+  color: var(--slate-element-bg);
+  font-size: 18px;
+}
+
+.appDescription a {
+  color: var(--fg-strong);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.container .chat-container {
   display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  border-style: solid;
+  border-color: var(--outline);
+  border-radius: 12px;
+  border-width: 1.5px;
+}
+
+.chat-container .main-chat-container {
+  flex-grow: 2;
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  min-height: 100%;
+}
+
+/* Styling for chat nav bar */
+.multichat-nav-bar {
+  border-width: 1.5px;
+  border-right-style: solid;
+  border-right-color: var(--outline);
+  width: 24%;
+}
+
+.multichat-nav-bar-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+}
+
+.multichat-nav-bar-container article.title {
+  margin: 0;
+  box-shadow: none;
+  padding: 12px 12px;
+  border-radius: 12px 12px 0 0;
+}
+
+.multichat-nav-bar-container article.new-chat-button-div {
+  padding: 12px 12px;
+  box-shadow: none;
+  border-bottom: 1px solid var(--outline);
+  border-radius: 12px 12px 0 0;
+  margin: 0;
+}
+
+.new-chat-button-div body {
+  white-space: nowrap;
+  color: white;
+  text-align: center;
+}
+
+.new-chat-button-div button {
+  margin: 0;
+  padding: 8px;
+  max-width: 100%;
+}
+
+.multichat-nav-bar-container .chat-selected {
+  background-color: var(--sky-bg-soft);
+}
+
+.chat-wrap {
+  margin: 0;
+  height: 64px;
+  box-shadow: none;
+  border-bottom: 1px solid var(--outline);
+  border-radius: 0;
+  display: flex;
+  flex-direction: row;
   justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+.chat-wrap .nav-item-label {
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  padding: 0;
+  flex-grow: 2;
+  display: flex;
+  align-items: center;
+}
+
+.nav-item-label .editing-item-label {
+  height: auto;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 16px;
+  border-color: var(--sky-fg-strong);
+  border-radius: 4px;
+  background-color: white;
+}
+
+.chat-wrap .nav-item-icons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.chat-wrap .nav-item-icons > div {
+  cursor: pointer;
+}
+
+/* Styling for Model Settings */
+.main-chat-container .model-banner {
+  background-color: var(--soft-bg);
+  color: var(--slate-element-bg);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  border-radius: 4px 4px 0px 0px;
+  box-shadow: none;
+  margin: 0 0 12px 0;
+  text-align: center;
+  font-weight: 600;
+  padding: 8px;
+}
+
+.model-banner .model-name {
+  flex-grow: 2;
+  text-align: center;
+}
+
+.model-banner .clear-chat {
+  float: right;
+  margin-right: 10px;
+}
+
+/* Styling for Chat Box */
+.chatbox {
+  flex-grow: 4;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.chatbox #chat-action-buttons-group {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0 40px;
+}
+
+#chat-action-buttons-group .input-box-div {
+  flex-grow: 4;
+  margin: 0;
+}
+
+.input-box-div #input-box {
+  resize: vertical;
+  margin: 0;
+  max-height: 200px;
+  border: 1.5px solid var(--outline);
+  padding: 12px;
+  font-size: 16px;
 }
 
 #error-message {
-  color: #a34d12;
-  font-weight: bold;
+  color: var(--negative-fg-strong);
+  font-weight: 400;
+  margin: 0;
 }
 
-#message-history-border {
-  border: 1px solid #808080;
-  border-radius: 5px;
-  overflow: hidden;
+.chatbox .helpful-tip {
+  color: var(--slate-element-bg);
+  font-weight: 400;
+  font-size: 14px;
+  margin: 0;
+  padding: 0 40px 16px 40px;
+  text-align: center;
 }
 
-#message-history {
-  overflow-y: scroll;
-  max-height: 60vh;
-  min-height: 30vh;
+.message-history-container {
+  border-radius: 0px 0px 4px 4px;
+  overflow-y: auto;
+  flex-grow: 4;
+  margin: 0 0 12px 0;
+  padding: 0 40px;
+  max-width: 100%;
 }
 
-.message {
-  border-radius: 15px;
-  padding-left: 15px;
-  padding-right: 15px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+.message-history-container .message-history {
+  padding: 0px;
+  height: 50vh;
+  max-width: 100%;
+}
+
+.message-history ul {
+  margin: 0px;
+  padding: 0;
+}
+
+.message-history .message {
+  border-radius: 16px;
+  padding: 16px;
   max-width: 85%;
   width: fit-content;
   list-style-type: none;
   white-space: pre-wrap;
 }
 
-.message-user {
-  border: 2px #ecf3d5;
+.message-history .message-user {
   border-top-right-radius: 0;
   margin-left: auto;
-  margin-right: 16px;
-  background-color: #ecf3d5;
+  margin-bottom: 8px;
+  background-color: #ecf2f6;
   color: #32302f;
 }
 
-.message-assistant {
-  border: 2px #f1f0f0;
+.message-history .message-assistant {
+  border: 2px var(--soft-bg);
   border-top-left-radius: 0;
   margin-right: auto;
-  margin-left: 8px;
-  background-color: #f1f0f0;
+  margin-bottom: 8px;
+  background-color: var(--soft-bg);
+  max-width: 80%;
 }
 
-.message p, li {
-  color: #1c1b1b;
+.message-history .message p,
+li {
+  color: var(--slate-element-bg);
+  font-size: 18px;
 }
 
 /* For ol (ordered lists), make sure to retain numbers. Otherwise it defaults
   to square bullet points: */
-.message ol > li {
+.message-history .message ol > li {
   list-style-type: number;
 }
 
 /* Make browser highlight color more visible against dark mode colors: */
-.message code span::selection {
+.message-history .message code span::selection {
   background: #4877a5;
 }
 
-.message code {
+.message-history .message code {
   padding: 0.1rem 0.5rem;
 }
 
-.code-header {
+.markdown-code-header {
   padding: 0.1rem 0.5rem;
   display: flex;
   justify-content: space-between;
@@ -92,34 +330,38 @@
   cursor: pointer;
 }
 
-.confirmation-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
+.code-block {
+  max-width: 90%;
 }
 
-.confirmation-content {
-  padding: 20px;
-  border-radius: 5px;
+/* styling for empty state screen */
+.empty-state {
+  min-height: 400px;
   text-align: center;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.confirmation-buttons {
-  margin-top: 20px;
+.empty-state .illustration {
+  margin: 20px;
 }
 
-.green-button {
-  background-color: #486635;
-  color: white;
+.empty-state h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  font-weight: 600;
 }
 
-.red-button {
-  background-color: #a43d12;
-  color: white;
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 12px;
+  color: var(--sky-fg-strong);
+}
+
+.footer {
+  color: var(--slate-element-bg);
+  font-size: 16px;
 }

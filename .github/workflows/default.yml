@@ -9,6 +9,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check_modified_files:
+    name: Check modified files
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v2
+        id: check-files
+        with:
+          filters: |
+            frontend_modified:
+              - "front_end/**"
+            backend_modified:
+              - "Dockerfile"
+              - 'llm_service/**'
+              - pyproject.toml
+              - poetry.lock
+    outputs:
+      frontend_modified: ${{ steps.check-files.outputs.frontend_modified }}
+      backend_modified: ${{ steps.check-files.outputs.backend_modified }}
+
+
+  frontend_test:
+    name: Tests & Lints LLM Gateway Frontend
+    if: needs.check_modified_files.outputs.frontend_modified == 'true'
+    runs-on: ubuntu-latest
+    needs:
+      - check_modified_files
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.13.1
+
+      - name: Install dependencies
+        run: |
+          npm install -g yarn
+          (cd front_end && yarn install)
+
+      - name: Check compatible licenses
+        run: (cd front_end && yarn check-license)
+
+      - name: Run linting
+        run: (cd front_end && yarn lint)
+
+      - name: Run Tests
+        run: (cd front_end && yarn test)
+
+
   backend_tests:
     name: Tests & Lints LLM Gateway Backend
     runs-on: ubuntu-latest
@@ -36,31 +89,5 @@ jobs:
 
       - name: Run Python Test Suite
         run: poetry run pytest
-
-  frontend_tests:
-    name: Tests & Lints LLM Gateway Frontend
-    strategy:
-      matrix:
-        node-version: [16.13.1]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
-        run: |
-          npm install -g yarn
-          (cd front_end && yarn install)
-
-      - name: Check compatible licenses
-        run: (cd front_end && yarn check-license)
-
-      - name: Run linting
-        run: (cd front_end && yarn lint)
-
-      - name: Run Tests
-        run: (cd front_end && yarn test)
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/llm_gateway"

@@ -1,10 +1,5 @@
 # LLM Gateway Front-end
 
-### 🐳 Development with Docker
-
-The guide to development with Docker is located in the main
-[README.md](../README.md).
-
 ### 🚫🐳 Development without Docker
 
 1. Install [fnm](https://github.com/Schniz/fnm) or

@@ -19,10 +19,70 @@
 
 export enum Role {
   assistant = 'assistant',
-  user = 'user' /* gitleaks:allow */,
+  user = 'user',
+  system = 'system',
 }
 
 export interface Message {
   role: Role;
   content: string;
+}
+
+export interface IRequestBody {
+  messages: Message[];
+  model: string;
+  temperature: number;
+  uploadedFile?: File;
+  filename?: string;
+}
+
+export interface ModelInfo {
+  name: string;
+  distributor: string;
+  apiEndpoint: string;
+  description: string;
+  maxTokensLimit: number;
+  isSecureModel: boolean;
+  advanceMetadata: ModelMetadata;
+  supportFileUpload: boolean;
+  initialPrompt: Message[];
+  requestBody: (req: IRequestBody) => OpenAIRequestBody | CohereRequestBody;
+  responseHandler: (res: any) => string;
+}
+
+export interface OpenAIRequestBody {
+  messages: Message[];
+  model: string;
+  temperature: number;
+}
+
+export interface CohereRequestBody {
+  temperature: number;
+  prompt: string;
+  max_tokens: number;
+  model: string;
+}
+
+interface ModelMetadata {
+  [key: string]: string;
+}
+
+export interface Models {
+  [key: string]: ModelInfo;
+}
+
+export interface Settings {
+  model: string;
+}
+
+export interface Conversation {
+  title: string;
+  messages: Message[];
+  model: string;
+  id: number;
+}
+
+export interface ConversationsState {
+  conversations: Conversation[];
+  selectedConversationId: number | null;
 }

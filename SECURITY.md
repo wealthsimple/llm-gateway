@@ -12,4 +12,4 @@ If you have a vulnerability to report about the Wealthsimple platform, please us
 
 ### General Support
 
-For additional support, please open a [Github Discussion](https://github.com/wealthsimple/llm-gateway/discussions). 
+For additional support, please open a [Github Discussion](https://github.com/wealthsimple/llm-gateway/discussions).

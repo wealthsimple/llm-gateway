@@ -17,26 +17,19 @@
 // limitations under the License.
 // *****************************************************************************
 
-import axios, { type AxiosError, type AxiosResponse } from 'axios';
-import { type IRequestBody } from '../app/interfaces';
-import { modelChoices } from '../constants';
-
-export async function fetchResponseFromModel(
-  props: IRequestBody,
-): Promise<string> {
-  const requestBody = modelChoices[props.model].requestBody(props);
-  const url = modelChoices[props.model].apiEndpoint;
-  try {
-    const res: AxiosResponse = await axios.post(url, requestBody);
-    return modelChoices[props.model].responseHandler(res.data);
-  } catch (error) {
-    const err = error as AxiosError;
-    const errRes = err.response as AxiosResponse;
-
-    if (err.message && errRes.data.detail) {
-      throw new Error(`${err.message}: ${errRes.data.detail}`);
-    }
-
-    throw new Error('Something went wrong - check console for details.');
-  }
-}
+export const CancelIcon = (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M7.10081 6.5L17.2609 17.5M17.5 6.60982L6.5 17.2803"
+      stroke="black"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+    />
+  </svg>
+);

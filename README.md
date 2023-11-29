@@ -87,11 +87,8 @@ poetry run pre-commit install
 To run in Docker:
 
 ```
-# build docker image
-make docker-build
-
 # spin up docker-compose
-make docker-run
+make up
 
 # open frontend in browser
 make browse
@@ -100,5 +97,5 @@ make browse
 make browse-api
 
 # delete docker-compose setup
-make clean
+make down
 ```

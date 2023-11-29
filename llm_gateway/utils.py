@@ -1,8 +1,29 @@
-import logging
+# llm-gateway - A proxy service in front of llm models to encourage the
+# responsible use of AI.
+#
+# Copyright 2023 Wealthsimple Technologies
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-level = logging.INFO
-logging.basicConfig(level=level)
-logger = logging.getLogger(__name__)
+import traceback
+from functools import wraps
+from typing import Any, Callable, Iterator, List
+
+from fastapi import HTTPException
+
+from llm_gateway.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def max_retries(times: int, exceptions: tuple = (Exception,)):
@@ -32,3 +53,53 @@ def max_retries(times: int, exceptions: tuple = (Exception,)):
         return newfn
 
     return decorator
+
+
+class StreamProcessor:
+    def __init__(self, stream_processor: Callable) -> None:
+        self.stream_processor = stream_processor
+        self.cached_streamed_response = []
+
+    def process_stream(self, response: Iterator) -> Iterator:
+        for item in self.stream_processor(response):
+            self.cached_streamed_response.append(item)
+            yield item
+
+    def get_cached_streamed_response(self) -> List[str]:
+        return self.cached_streamed_response
+
+
+def reraise_500(func: Callable) -> Callable:
+    """
+    Decorator to ensure routes return informative error messages
+    when encountering an internal error. Provides a sensible default,
+    but will be overwritten if the route provides a specific HTTP exception.
+
+    Always put this decorator as the bottom decorator. Otherwise, the fastapi
+    router decorator will overpower it.
+
+    :param func: Callable to be decorated
+    :type func: Callable
+    :raises HTTPException: If there is any error raise HTTP 500 and log to DataDog
+    :return: Decorated callable
+    :rtype: Callable
+    """
+
+    # stops function signature from being overwritten
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: dict) -> None:
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            # If the route is already raising a specific HTTPException,
+            # use it instead of overriding with our 500 code
+            if isinstance(e, HTTPException):
+                raise e
+            else:
+                logger.error(traceback.format_exc())
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Internal error due to: {str(e)}",
+                )
+
+    return wrapper

@@ -17,21 +17,20 @@
 // limitations under the License.
 // *****************************************************************************
 
-import React from 'react';
-import { render } from '@testing-library/react';
-
-import { App } from './app';
-
-describe('App', () => {
-  window.HTMLElement.prototype.scrollIntoView = function () {}; // eslint-disable-line
-
-  it('should render successfully', () => {
-    const { baseElement } = render(<App />);
-    expect(baseElement).toBeTruthy();
-  });
-
-  it('should have a greeting as the title', () => {
-    const { getByText } = render(<App />);
-    expect(getByText(/LLM Gateway/gi)).toBeTruthy();
-  });
-});
+export const ArrowIcon = (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M4.5 11.9993H19.5M19.5 11.9993L15.75 8M19.5 11.9993L15.75 16"
+      stroke="white"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

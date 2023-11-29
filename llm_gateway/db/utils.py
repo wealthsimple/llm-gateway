@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from contextlib import contextmanager
 from typing import Iterator
 
@@ -24,6 +23,10 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
+from llm_gateway.constants import get_settings
+
+settings = get_settings()
+
 
 class DB:
     """
@@ -31,7 +34,7 @@ class DB:
     """
 
     def __init__(self) -> None:
-        self.db_url = os.environ.get("DATABASE_URL", "")
+        self.db_url = settings.DATABASE_URL
 
     def create_db_engine(self) -> Engine:
         """

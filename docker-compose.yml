@@ -17,7 +17,10 @@ services:
             retries: 5
 
     migration:
-        image: llm-gateway-backend
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: backend-builder
         env_file:
             - .envrc
         command: alembic upgrade head
@@ -26,17 +29,12 @@ services:
                 condition: service_healthy
 
     llm_gateway_backend:
-        image: llm-gateway-backend
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: backend-builder
         container_name: llm-gateway-backend
-        command: [
-            "uvicorn",
-            "--host",
-            "0.0.0.0",
-            "--port",
-            "5000",
-            "llm_gateway.app:app",
-            "--reload"
-        ]
+        command: uvicorn --host 0.0.0.0 --port 5000 llm_gateway.app:app --reload
         env_file:
             - .envrc
         ports:
@@ -56,12 +54,12 @@ services:
             - ./llm_gateway:/usr/src/app/llm_gateway
 
     llm_gateway_frontend:
-        image: llm-gateway-frontend
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: frontend-pre-builder
         container_name: llm-gateway-frontend
-        command: [
-            "yarn",
-            "start"
-        ]
+        command: yarn start
         ports:
             - "3000:3000"
         volumes:

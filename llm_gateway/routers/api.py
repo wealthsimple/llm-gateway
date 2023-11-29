@@ -18,39 +18,31 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from llm_gateway.constants import get_settings
-from llm_gateway.routers import cohere_api, openai_api
+from llm_gateway.constants import AppEnv, get_settings
+from llm_gateway.routers.cohere_api import router as CohereRouter
+from llm_gateway.routers.openai_api import router as OpenAIRouter
 
 settings = get_settings()
 
-app = FastAPI()
-app.title = settings.APP_TITLE
-app.description = settings.APP_DESCRIPTION
+api_app = FastAPI()
+api_app.include_router(OpenAIRouter, prefix="/openai")
+api_app.include_router(CohereRouter, prefix="/cohere")
+
+# allow CORS for local development with frontend
+if settings.APP_ENV in (AppEnv.DEVELOPMENT, AppEnv.STAGING):
+    api_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
-api = FastAPI(openapi_prefix="/api")
-api.title = settings.APP_TITLE
-api.description = settings.APP_DESCRIPTION
-api.include_router(openai_api.router, prefix="/openai")
-api.include_router(cohere_api.router, prefix="/cohere")
-
-app.mount(settings.API_PREFIX, api, name="api")
-
-# Allow Front-end Origin in local development
-origins = ["http://localhost:3000"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@api.get("/healthcheck")
+@api_app.get("/healthcheck")
 async def healthcheck():
     """
     Endpoint to verify that the service is up and running
     """
-    return {"message": "llm-gateway is healthy"}
+    content = {"message": "llm-gateway is healthy"}
+    return content
