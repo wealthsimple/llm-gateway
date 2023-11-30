@@ -5,7 +5,7 @@ metadata:
   description: Gateway for secure & reliable communications with OpenAI and other LLM providers
   tags:
     - machine-learning
-    - open-source    
+    - open-source
     - python
 spec:
   type: website

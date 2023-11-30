@@ -15,9 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from starlette.responses import JSONResponse
 
+from llm_gateway.exceptions import OpenAIRouteExceptionHandler
 from llm_gateway.models import (
     ChatCompletionInput,
     CompletionInput,
@@ -25,12 +27,16 @@ from llm_gateway.models import (
     EmbeddingInput,
 )
 from llm_gateway.providers.openai import OpenAIWrapper
+from llm_gateway.utils import reraise_500
 
-router = APIRouter()
+router = APIRouter(route_class=OpenAIRouteExceptionHandler)
 
 
 @router.post("/completion")
-def get_completion(user_input: CompletionInput) -> JSONResponse:
+@reraise_500
+def get_completion(
+    user_input: CompletionInput, background_tasks: BackgroundTasks
+) -> JSONResponse:
     """
     Use OpenAI's completion API to generate a response to a prompt
 
@@ -39,23 +45,50 @@ def get_completion(user_input: CompletionInput) -> JSONResponse:
     :return: Dictionary with LLM response and metadata
     :rtype: JSONResponse
     """
-
     wrapper = OpenAIWrapper()
-    return JSONResponse(
-        wrapper.send_openai_request(
-            "Completion",
-            "create",
-            max_tokens=user_input.max_tokens,
-            prompt=user_input.prompt,
-            temperature=user_input.temperature,
-            model=user_input.model,
-            **user_input.model_kwargs
-        )
+    resp, logs = wrapper.send_openai_request(
+        "Completion",
+        "create",
+        model=user_input.model,
+        max_tokens=user_input.max_tokens,
+        prompt=user_input.prompt,
+        temperature=user_input.temperature,
+        **user_input.model_kwargs,
     )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+
+    return JSONResponse(resp)
+
+
+@router.post("/completion/stream")
+@reraise_500
+def get_completion_stream(
+    user_input: CompletionInput, background_tasks: BackgroundTasks
+) -> JSONResponse:
+    wrapper = OpenAIWrapper()
+
+    resp, logs = wrapper.send_openai_request(
+        "Completion",
+        "create",
+        model=user_input.model,
+        max_tokens=user_input.max_tokens,
+        prompt=user_input.prompt,
+        temperature=user_input.temperature,
+        stream=True,
+        **user_input.model_kwargs,
+    )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+
+    return StreamingResponse(resp, media_type="text/plain")
 
 
 @router.post("/chat_completion")
-def get_chat_completion(user_input: ChatCompletionInput) -> JSONResponse:
+@reraise_500
+def get_chat_completion(
+    user_input: ChatCompletionInput, background_tasks: BackgroundTasks
+) -> JSONResponse:
     """
     Use OpenAI's chat_completion API to generate a response given a chat (series of prompts)
 
@@ -64,22 +97,42 @@ def get_chat_completion(user_input: ChatCompletionInput) -> JSONResponse:
     :return: Dictionary with LLM response and metadata
     :rtype: JSONResponse
     """
-
     wrapper = OpenAIWrapper()
-    return JSONResponse(
-        wrapper.send_openai_request(
-            "ChatCompletion",
-            "create",
-            messages=user_input.messages,
-            temperature=user_input.temperature,
-            model=user_input.model,
-            **user_input.model_kwargs
-        )
+    resp, logs = wrapper.send_openai_request(
+        "ChatCompletion",
+        "create",
+        model=user_input.model,
+        messages=user_input.messages,
+        temperature=user_input.temperature,
+        **user_input.model_kwargs,
     )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return JSONResponse(resp)
+
+
+@router.post("/chat_completion/stream")
+@reraise_500
+def get_chat_completion_stream(
+    user_input: ChatCompletionInput, background_tasks: BackgroundTasks
+) -> StreamingResponse:
+    wrapper = OpenAIWrapper()
+    response, logs = wrapper.send_openai_request(
+        "ChatCompletion",
+        "create",
+        model=user_input.model,
+        messages=user_input.messages,
+        temperature=user_input.temperature,
+        stream=True,
+        **user_input.model_kwargs,
+    )
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return StreamingResponse(response, media_type="text/plain")
 
 
 @router.post("/edit")
-def get_edit(user_input: EditInput) -> JSONResponse:
+@reraise_500
+def get_edit(user_input: EditInput, background_tasks: BackgroundTasks) -> JSONResponse:
     """
     Use OpenAI's edit API to edit a prompt given some instruction
 
@@ -88,21 +141,24 @@ def get_edit(user_input: EditInput) -> JSONResponse:
     :return: Dictionary with edited prompts and metadata
     :rtype: JSONResponse
     """
-
     wrapper = OpenAIWrapper()
-    return JSONResponse(
-        wrapper.send_openai_request(
-            "Edits",
-            "create",
-            prompt=user_input.prompt,
-            instruction=user_input.instruction,
-            model=user_input.model,
-        )
+    resp, logs = wrapper.send_openai_request(
+        "Edits",
+        "create",
+        prompt=user_input.prompt,
+        instruction=user_input.instruction,
+        model=user_input.model,
     )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return JSONResponse(resp)
 
 
 @router.post("/embedding")
-def get_embedding(user_input: EmbeddingInput) -> JSONResponse:
+@reraise_500
+def get_embedding(
+    user_input: EmbeddingInput, background_tasks: BackgroundTasks
+) -> JSONResponse:
     """
     Use OpenAI to turn a list of prompts into vectors
 
@@ -111,13 +167,12 @@ def get_embedding(user_input: EmbeddingInput) -> JSONResponse:
     :return: List of embeddings (a vector for each input prompt) and metadata
     :rtype: JSONResponse
     """
-
     wrapper = OpenAIWrapper()
-    return JSONResponse(
-        wrapper.send_openai_request(
-            "Embedding",
-            "create",
-            embedding_texts=user_input.embedding_texts,
-            model=user_input.model,
-        )
+    resp, logs = wrapper.send_openai_request(
+        "Embedding",
+        "create",
+        embedding_texts=user_input.embedding_texts,
+        model=user_input.model,
     )
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return JSONResponse(resp)

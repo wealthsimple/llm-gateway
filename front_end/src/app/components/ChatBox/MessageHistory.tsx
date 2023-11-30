@@ -18,7 +18,7 @@
 // *****************************************************************************
 
 import React from 'react';
-import { Message } from '../../interfaces';
+import { type Message } from '../../interfaces';
 import { MessageContent } from '../message-content';
 import { RANDOM_LOADING_PHRASES } from '../../../constants';
 
@@ -38,12 +38,12 @@ export const MessageHistoryComponent: React.FC<Props> = ({
 }) => {
   return (
     // wrap a second div so that scrollbar and border don't overlap
-    <div id="message-history-border">
-      <div id="message-history">
+    <div className="message-history-container">
+      <div className="message-history">
         <ul>
-          {messages.map((message) => (
+          {messages.map((message, idx) => (
             <li
-              key={message.role}
+              key={`${message.role}-${idx}}`}
               className={`message message-${message.role}`}
             >
               {/* Only attempt to format assistant messages which are reliably

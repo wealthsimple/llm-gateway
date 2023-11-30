@@ -17,26 +17,15 @@
 // limitations under the License.
 // *****************************************************************************
 
-import axios, { type AxiosError, type AxiosResponse } from 'axios';
-import { type IRequestBody } from '../app/interfaces';
-import { modelChoices } from '../constants';
+import React from 'react';
+import { EmptyState } from '../Icons/EmptyStateIllustration';
 
-export async function fetchResponseFromModel(
-  props: IRequestBody,
-): Promise<string> {
-  const requestBody = modelChoices[props.model].requestBody(props);
-  const url = modelChoices[props.model].apiEndpoint;
-  try {
-    const res: AxiosResponse = await axios.post(url, requestBody);
-    return modelChoices[props.model].responseHandler(res.data);
-  } catch (error) {
-    const err = error as AxiosError;
-    const errRes = err.response as AxiosResponse;
-
-    if (err.message && errRes.data.detail) {
-      throw new Error(`${err.message}: ${errRes.data.detail}`);
-    }
-
-    throw new Error('Something went wrong - check console for details.');
-  }
-}
+export const EmptyChatBoxComponent: React.FC = () => {
+  return (
+    <div className="empty-state">
+      <div className="illustration">{EmptyState}</div>
+      <h1> No chat to display!</h1>
+      <h3> Create a new chat to start using LLM Gateway.</h3>
+    </div>
+  );
+};

@@ -15,28 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import datetime
 import json
-import os
-from typing import List, Optional
+from typing import Iterator, List, Optional, Tuple, Union
 
 import openai
 
+from llm_gateway.constants import get_settings
 from llm_gateway.db.models import OpenAIRequests
 from llm_gateway.db.utils import write_record_to_db
+from llm_gateway.exceptions import OPENAI_EXCEPTIONS
 from llm_gateway.pii_scrubber import scrub_all
-from llm_gateway.utils import max_retries
+from llm_gateway.utils import StreamProcessor, max_retries
 
-from openai.error import Timeout, APIError, APIConnectionError, TryAgain
+settings = get_settings()
 
-OPENAI_EXCEPTIONS = (Timeout, APIError, APIConnectionError, TryAgain)
 SUPPORTED_OPENAI_ENDPOINTS = {
-    "Model": ["list", "retrieve"],
-    "ChatCompletion": ["create"],
-    "Completion": ["create"],
-    "Edits": ["create"],
-    "Embedding": ["create"],
+    "Model": ("list", "retrieve"),
+    "ChatCompletion": ("create"),
+    "Completion": ("create"),
+    "Edits": ("create"),
+    "Embedding": ("create"),
 }
 
 
@@ -49,7 +48,7 @@ class OpenAIWrapper:
 
     def __init__(self) -> None:
         if not openai.api_key:
-            openai.api_key = os.getenv("OPENAI_API_KEY")
+            openai.api_key = settings.OPENAI_API_KEY
 
     def _validate_openai_endpoint(self, module: str, endpoint: str) -> None:
         """
@@ -61,7 +60,6 @@ class OpenAIWrapper:
         :type endpoint: str
         :raises NotImplementedError: Raised if OpenAI module or endpoint is not supported
         """
-
         if module not in SUPPORTED_OPENAI_ENDPOINTS:
             raise NotImplementedError(
                 f"`openai_endpoint` must be one of `{SUPPORTED_OPENAI_ENDPOINTS.keys()}`"
@@ -72,7 +70,6 @@ class OpenAIWrapper:
                 f"`{endpoint}` not supported action for `{module}`"
             )
 
-    @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_model_endpoint(self, endpoint: str, model: Optional[str] = None):
         """
         List or retrieve model(s) from OpenAI
@@ -80,12 +77,11 @@ class OpenAIWrapper:
         :param endpoint: Whether to "list" models or "retrieve" a model
         :type endpoint: str
         :param model: Name of model, if "retrieve" is passed, defaults to None
-        :type model: Optional[str], optional
+        :type model: Optional[str]
         :raises Exception: Raised if endpoint is "retrieve" and model is unspecified
         :return: List of models or retrieved model
         :rtype: _type_
         """
-
         if endpoint == "list":
             return openai.Model.list()
         elif endpoint == "retrieve":
@@ -96,40 +92,47 @@ class OpenAIWrapper:
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_completion_endpoint(
         self,
-        prompt: str,
         model: str,
+        prompt: str,
         max_tokens: int,
         temperature: Optional[float] = 0,
+        stream=False,
         **kwargs,
     ):
         """
         Call the completion endpoint from the OpenAI client and return response
-
-        :param prompt: String prompt
-        :type prompt: str
         :param model: Model to hit
         :type model: str
+        :param prompt: String prompt
+        :type prompt: str
         :param max_tokens: Maximum tokens for prompt and completion
         :type max_tokens: int
         :param temperature: Temperature altering the creativity of the response
-        :type temperature: float, optional
-        :param kwargs: Other parameters to pass to openai api (i.e. functions, etc.)
-        :type kwargs: dict, optional
+        :type temperature: Optional[float]
+        :param stream: Return streamed response, defaults to False
+        :type stream: bool
+        :param kwargs: other parameters to pass to openai api.
+        :type kwargs: Optional[dict]
         :return: Response from OpenAI
         :rtype: _type_
         """
-
         return openai.Completion.create(
             model=model,
             prompt=prompt,
             max_tokens=max_tokens,
             temperature=temperature,
+            stream=stream,
             **kwargs,
         )
 
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
     def _call_chat_completion_endpoint(
-        self, model: str, messages: list, temperature: Optional[float] = 0, **kwargs
+        self,
+        model: str,
+        messages: list,
+        temperature: Optional[float] = 0,
+        stream=False,
+        **kwargs,
     ):
         """
         Call the chat completion endpoint from the OpenAI client and return response
@@ -139,15 +142,20 @@ class OpenAIWrapper:
         :param messages: List of messages in the chat so far
         :type messages: list
         :param temperature: Temperature altering the creativity of the response, defaults to 0
-        :type temperature: float, optional
-        :param kwargs: Other parameters to pass to openai api (i.e. functions, etc.)
-        :type kwargs: dict, optional
+        :type temperature: Optional[float]
+        :param stream: Return streamed response, defaults to False
+        :type stream: bool
+        :param kwargs: other parameters to pass to openai api. (ie- functions, function_call, etc.)
+        :type kwargs: Optional[dict]
         :return: Response from OpenAI
         :rtype: _type_
         """
-
         return openai.ChatCompletion.create(
-            model=model, messages=messages, temperature=temperature, **kwargs
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            stream=stream,
+            **kwargs,
         )
 
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
@@ -161,10 +169,11 @@ class OpenAIWrapper:
         :type input: str
         :param instruction: How to edit the input string
         :type instruction: str
+        :param stream: Return streamed response, defaults to False
+        :type stream: bool
         :return: Response from OpenAI containing edited input
         :rtype: _type_
         """
-
         return openai.Edit.create(model=model, input=input, instruction=instruction)
 
     @max_retries(3, exceptions=OPENAI_EXCEPTIONS)
@@ -179,25 +188,13 @@ class OpenAIWrapper:
         :return: Response from OpenAI containing embeddedings
         :rtype: _type_
         """
-
         return openai.Embedding.create(input=texts, model=model)
-
-    def _flatten_openai_response(self, openai_response):
-        """
-        Flatten response from OpenAI as JSON
-
-        :param openai_response: Raw response from OpenAI
-        :type openai_response: _type_
-        :return: Flattened OpenAI response as JSON
-        :rtype: _type_
-        """
-
-        return json.loads(json.dumps(openai_response, default=lambda o: o.__dict__))
 
     def send_openai_request(
         self,
         openai_module: str,
         endpoint: str,
+        stream: bool = False,
         model: Optional[str] = None,
         max_tokens: Optional[int] = None,
         prompt: Optional[str] = None,
@@ -206,37 +203,35 @@ class OpenAIWrapper:
         instruction: Optional[str] = None,
         embedding_texts: Optional[list] = None,
         **kwargs,
-    ):
+    ) -> Tuple[Union[dict, Iterator[str]], dict]:
         """
-        Send a request to the OpenAI API and log interactions to the DB
+        Send a request to the OpenAI API and return response and logs for db write
 
         :param openai_module: Valid OpenAI module to hit (i.e. "Completion")
         :type openai_module: str
         :param endpoint: Valid OpenAI endpoint to hit (i.e. "create")
         :type endpoint: str
         :param model: Model to hit, defaults to None
-        :type model: str, optional
+        :type model: Optional[str]
         :param max_tokens: Maximum tokens for prompt and completion, defaults to None
-        :type max_tokens: int, optional
+        :type max_tokens: Optional[int]
         :param prompt: _description_, defaults to None
         :type prompt: String prompt, if calling completion or edits, optional
         :param temperature: Temperature altering the creativity of the response, defaults to 0
-        :type temperature: float, optional
-        :param messages: List of prior messages, if calling chat completion, defaults to None
-        :type messages: list, optional
+        :type temperature: Optional[float]
+        :param messages: list of messages for chat endpoint
+        :type messages: Optional[list]
         :param instruction: How to perform edits, if calling edits, defaults to None
-        :type instruction: str, optional
+        :type instruction: Optional[str]
         :param embedding_texts: List of prompts, if calling embedding, defaults to None
-        :type embedding_texts: list, optional
-        :param kwargs: Other parameters to pass to openai api (i.e. functions, etc.)
+        :type embedding_texts: Optional[list]
+        :param kwargs: other parameters to pass to openai api. (ie- functions, function_call, etc.)
         :type kwargs: Optional[dict]
         :return: Flattened response from OpenAI
         :rtype: _type_
         """
-
         self._validate_openai_endpoint(openai_module, endpoint)
 
-        # scrub sensitive information
         if messages:
             messages = [scrub_all(message) for message in messages]
         if prompt:
@@ -251,18 +246,12 @@ class OpenAIWrapper:
             user_input = f"/Model/{endpoint}"
         elif openai_module == "Completion":
             result = self._call_completion_endpoint(
-                prompt, model, max_tokens, temperature, **kwargs
+                model, prompt, max_tokens, temperature, stream, **kwargs
             )
             user_input = prompt
         elif openai_module == "ChatCompletion":
             result = self._call_chat_completion_endpoint(
-                model, messages, temperature, **kwargs
-            )
-            messages.append(
-                {
-                    "user": "assistant",
-                    "content": result["choices"][0]["message"]["content"],
-                }
+                model, messages, temperature, stream, **kwargs
             )
             user_input = str(messages)
         elif openai_module == "Edits":
@@ -272,20 +261,60 @@ class OpenAIWrapper:
             result = self._call_embedding_endpoint(model, embedding_texts)
             user_input = str(embedding_texts)
 
-        openai_response = self._flatten_openai_response(result)
-
-        write_record_to_db(
-            OpenAIRequests(
-                **{
-                    "user_input": user_input,
-                    "user_email": None,
-                    "openai_response": openai_response,
-                    "openai_model": model,
-                    "temperature": temperature,
-                    "openai_endpoint": openai_module,
-                    "extras": json.dumps(kwargs),
-                    "created_at": datetime.datetime.now(),
-                }
+        if not stream:
+            openai_response = result.to_dict()
+            cached_response = openai_response
+        elif openai_module == "ChatCompletion":
+            stream_processor = StreamProcessor(
+                stream_processor=stream_generator_openai_chat
             )
-        )
-        return openai_response
+            openai_response = stream_processor.process_stream(result)
+            cached_response = stream_processor.get_cached_streamed_response()
+        elif openai_module == "Completion":
+            stream_processor = StreamProcessor(
+                stream_processor=stream_generator_openai_completion
+            )
+            openai_response = stream_processor.process_stream(result)
+            cached_response = stream_processor.get_cached_streamed_response()
+        # The cached streaming response is an empty list at this point.
+        # Once the stream is returned to the user it will be populated
+        # Since the DB write happens after the stream, this will always be populated
+        db_record = {
+            "user_input": user_input,
+            "user_email": None,
+            "openai_response": cached_response,
+            "openai_model": model,
+            "temperature": temperature,
+            "extras": json.dumps(kwargs),
+            "openai_endpoint": openai_module,
+            "created_at": datetime.datetime.now(),
+        }
+
+        return openai_response, db_record
+
+    def write_logs_to_db(self, db_logs: dict):
+        if isinstance(db_logs["openai_response"], list):
+            db_logs["openai_response"] = "".join(db_logs["openai_response"])
+        write_record_to_db(OpenAIRequests(**db_logs))
+
+
+def stream_generator_openai_chat(generator: Iterator) -> Iterator[str]:
+    for chunk in generator:
+        answer = ""
+        try:
+            current_response = chunk["choices"][0]["delta"]["content"]
+            answer += current_response
+        except KeyError:
+            pass
+        yield answer
+
+
+def stream_generator_openai_completion(generator: Iterator) -> Iterator[str]:
+    for chunk in generator:
+        answer = ""
+        try:
+            current_response = chunk["choices"][0]["text"]
+            answer += current_response
+        except KeyError:
+            pass
+        yield answer

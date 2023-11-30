@@ -17,18 +17,18 @@
 // limitations under the License.
 // *****************************************************************************
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { fetchResponseFromModel } from '../../../services/apiService';
-import { CONVERSATION_KEY, DIALOGUE_DEFAULT_MESSAGE } from '../../../constants';
-import { Message, Role } from '../../interfaces';
-import { SendButtonComponent } from './SendButton';
-import { ClearButton } from './ClearButton';
+import { type Message, Role, type IRequestBody } from '../../interfaces';
 import { MessageHistoryComponent } from './MessageHistory';
 
 interface ChatBoxProps {
+  messages: Message[];
+  setMessages: (arg: Message[]) => void;
   modelName: string;
   modelTemperature: number;
-  setShowSettings: (arg: boolean) => void;
+  isModelLoadingReply: boolean;
+  setIsModelLoadingReply: (arg: boolean) => void;
 }
 
 const sendMessage = (
@@ -60,7 +60,12 @@ const sendMessage = (
   // add user's message to history
   const newMessageHistory = [...messages, message];
   setMessages(newMessageHistory);
-  fetchResponseFromModel(model, newMessageHistory, temperature)
+  const apiRequestBody: IRequestBody = {
+    messages: newMessageHistory,
+    model: model,
+    temperature: temperature,
+  };
+  fetchResponseFromModel(apiRequestBody)
     .then((resContent) => {
       setMessages([
         ...newMessageHistory,
@@ -68,7 +73,7 @@ const sendMessage = (
       ]);
     })
     .catch((err) => {
-      console.log('error');
+      console.log(err);
       setErrMsg(err.message);
     })
     .finally(() => {
@@ -76,35 +81,15 @@ const sendMessage = (
       setIsLoadingReply(false);
     });
 };
-const saveConversation = (conversation: Message[]) => {
-  const conversationJson = JSON.stringify(conversation);
-  localStorage.setItem(CONVERSATION_KEY, conversationJson);
-};
 
-const loadConversation = (): Message[] => {
-  const conversationJson = localStorage.getItem(CONVERSATION_KEY);
-  if (conversationJson) {
-    return JSON.parse(conversationJson);
-  }
-  return DIALOGUE_DEFAULT_MESSAGE;
-};
 export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
+  messages,
+  setMessages,
   modelName,
   modelTemperature,
-  setShowSettings,
+  isModelLoadingReply,
+  setIsModelLoadingReply,
 }) => {
-  const [messages, setMessages] = useState<Message[]>(loadConversation());
-
-  useEffect(() => {
-    saveConversation(messages);
-  }, [messages]);
-
-  const clearMessages = () => {
-    setMessages(loadConversation);
-  };
-
-  const [isModelLoadingReply, setIsModelLoadingReply] =
-    useState<boolean>(false);
   const [readyToSendMessage, setReadyToSendMessage] = useState<boolean>(true);
   const [errMsg, setErrMsg] = useState<string>('');
   const [inputVal, setInputVal] = useState('');
@@ -124,43 +109,50 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
     );
 
   return (
-    <div id="chatbox">
+    <div className="chatbox">
       {/* slice(1) to remove initial assistant message */}
       <MessageHistoryComponent
         messages={messages.slice(1)}
         isLoadingReply={isModelLoadingReply}
       />
-      <textarea
-        id="input-box"
-        value={inputVal}
-        placeholder="Send a message"
-        onChange={(e) => {
-          setInputVal(e.target.value);
-        }}
-        onKeyDownCapture={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            // needed to prevent newline character from being added to textarea
-            e.preventDefault();
-            triggerSendMessage();
-          }
-        }}
-        autoFocus
-      />
-      <p id="error-message">{errMsg}</p>
-      <SendButtonComponent
-        sendMessageHandler={triggerSendMessage}
-        setShowModelSettings={setShowSettings}
-      />
-      <p>
-        Press enter to send a message. Press shift+enter to make a multi-line
-        message.
-      </p>
-      <ClearButton
-        onClear={clearMessages}
-      />
-      <p>
-        Clears conversation history. Click to confirm.
-      </p>
+      <div id="chat-action-buttons-group" className="grid">
+        <div className="input-box-div">
+          <textarea
+            id="input-box"
+            value={inputVal}
+            rows={1}
+            placeholder="Send a message"
+            onChange={(e) => {
+              setInputVal(e.target.value);
+            }}
+            onKeyDownCapture={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                // needed to prevent newline character from being added to textarea
+                e.preventDefault();
+                triggerSendMessage();
+              }
+            }}
+            autoFocus
+          />
+        </div>
+        <a
+          className="send-button primary-btn"
+          href="#send"
+          role="button"
+          onClick={triggerSendMessage}
+        >
+          Send
+        </a>
+      </div>
+
+      {errMsg ? (
+        <p id="error-message">{errMsg}</p>
+      ) : (
+        <p className="helpful-tip">
+          Press enter to send a message, shift+enter to make a multi-line
+          message.
+        </p>
+      )}
     </div>
   );
 };
