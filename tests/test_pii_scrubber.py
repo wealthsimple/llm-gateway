@@ -15,6 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# llm-gateway - A proxy service in front of llm models to encourage the
+# responsible use of AI.
+#
+# Copyright 2023 Wealthsimple Technologies
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # flake8: noqa
 
 from unittest.mock import patch
@@ -167,20 +184,29 @@ def test_scrub_all_wrong_type():
 def test_pii_scrubber_end_to_end(mock_write_record_to_db, mock_openai_module):
     """Make a ChatGPT request with some pii and make sure it gets scrubbed."""
 
-    mock_openai_module.create.return_value = {
-        "id": "chatcmpl-abc123",
-        "object": "chat.completion",
-        "created": 1677858242,
-        "model": "gpt-3.5-turbo-0301",
-        "usage": {"prompt_tokens": 13, "completion_tokens": 7, "total_tokens": 20},
-        "choices": [
-            {
-                "message": {"role": "assistant", "content": "\n\nThis is a test!"},
-                "finish_reason": "stop",
-                "index": 0,
-            }
-        ],
-    }  # garbage data, not important
+    class MockResponse:
+        def __init__(self, resp):
+            self.resp = resp
+
+        def to_dict(self):
+            return self.resp
+
+    mock_openai_module.create.return_value = MockResponse(
+        {
+            "id": "chatcmpl-abc123",
+            "object": "chat.completion",
+            "created": 1677858242,
+            "model": "gpt-3.5-turbo-0301",
+            "usage": {"prompt_tokens": 13, "completion_tokens": 7, "total_tokens": 20},
+            "choices": [
+                {
+                    "message": {"role": "assistant", "content": "\n\nThis is a test!"},
+                    "finish_reason": "stop",
+                    "index": 0,
+                }
+            ],
+        }
+    )  # garbage data, not important
     wrapper = OpenAIWrapper()
 
     result = wrapper.send_openai_request(

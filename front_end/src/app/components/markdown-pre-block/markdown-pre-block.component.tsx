@@ -54,9 +54,14 @@ export const MarkdownPreBlock = ({
 
   const getSyntaxHighlightedCode = () => {
     if (language) {
-      return hljs.highlight(code, { language, ignoreIllegals: true }).value;
+      try {
+        return hljs.highlight(code, { language, ignoreIllegals: true }).value;
+      } catch (error) {
+        return hljs.highlight(code, { language: 'bash' }).value;
+      }
     }
-    // If no language is specified, try to auto-detect the language based on the
+    // If no language is specified or unable to process the language,
+    // try to auto-detect the language based on the
     // common languages we use:
     return hljs.highlightAuto(code, COMMON_PROGRAMMING_LANGUAGES).value;
   };

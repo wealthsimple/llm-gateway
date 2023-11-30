@@ -1,5 +1,5 @@
 ARG BASE_LAYER=base
-FROM python:3.11.3-slim-buster1 as base
+FROM python:3.11.3-slim-buster as base
 LABEL maintainer="Data Science & Engineering @ Wealthsimple <data@wealthsimple.com>"
 
 ##############################################
@@ -14,7 +14,7 @@ FROM python:3.11-bullseye as base-dev
 
 ##############################################
 
-FROM $BASE_LAYER as builder
+FROM $BASE_LAYER as backend-builder
 
 RUN pip install poetry==1.3.2
 
@@ -39,7 +39,7 @@ COPY --chown=nobody:nogroup ./alembic/ ./alembic/
 
 ##############################################
 
-FROM builder as test-suite
+FROM backend-builder as backend-test-suite
 
 RUN poetry install --no-interaction --no-root
 
@@ -52,9 +52,33 @@ CMD ["pytest"]
 
 ##############################################
 
-FROM builder as application
+FROM node:16.13.1 as frontend-pre-builder
 
-# fastapi server port
-EXPOSE 5000 5000
+WORKDIR /usr/src/app
 
-CMD ["uvicorn", "--host", "0.0.0.0","--port", "5000", "llm_gateway.app:app"]
+# Install dependencies
+COPY front_end/package.json front_end/yarn.lock front_end/.eslintrc.json front_end/tsconfig.json front_end/.env-cmdrc ./
+RUN yarn install
+
+##############################################
+
+FROM frontend-pre-builder as frontend-builder-staging
+
+# Build ready for Staging
+COPY ./front_end ./
+RUN yarn build-staging
+
+##############################################
+
+FROM frontend-pre-builder as frontend-builder-production
+
+# Build ready for Production
+COPY ./front_end ./
+RUN yarn build-production
+
+##############################################
+
+# Copy frontend build artifacts into the backend image
+FROM backend-builder as application
+COPY --from=frontend-builder-production /usr/src/app/build/ /usr/src/app/front_end/build-production/
+COPY --from=frontend-builder-staging /usr/src/app/build/ /usr/src/app/front_end/build-staging/

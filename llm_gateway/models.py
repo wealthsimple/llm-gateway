@@ -25,22 +25,32 @@ class GenerateInput(BaseModel):
     prompt: str
     max_tokens: int = 50
     model: str = "command-light"
+    model_kwargs: dict = {}
+
+
+class SummarizeInput(BaseModel):
+    temperature: float
+    prompt: str
+    additional_command: str = ""
+    model: str = "command-light"
+    model_kwargs: dict = {}
 
 
 class CompletionInput(BaseModel):
-    temperature: float
+    model: str = "text-davinci-003"
     prompt: str
     max_tokens: int = 50
-    model: str = "text-davinci-003"
+    temperature: float = 0
     model_kwargs: dict = {}
 
 
 class ChatCompletionInput(BaseModel):
+    model: str = "gpt-3.5-turbo"
     messages: list = [
         {"role": "assistant", "content": "You are an intelligent assistant."}
     ]
-    model: str = "gpt-3.5-turbo"
     temperature: float = 0
+    max_tokens: int = 2000
     model_kwargs: dict = {}
 
 

@@ -1,8 +1,9 @@
 from unittest.mock import Mock
 
 import pytest
-from llm_gateway.utils import max_retries
 from openai.error import APIError
+
+from llm_gateway.utils import max_retries
 
 
 def test_retry_decorator_mismatch_exception():
@@ -12,7 +13,7 @@ def test_retry_decorator_mismatch_exception():
     @max_retries(1, exceptions=(ValueError,))
     def mismatch_exception():
         return retry_mock()
-    
+
     with pytest.raises(APIError):
         mismatch_exception()
 

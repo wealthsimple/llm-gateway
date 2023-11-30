@@ -17,39 +17,4 @@
 // limitations under the License.
 // *****************************************************************************
 
-import React from 'react';
-
-interface Props {
-  sendMessageHandler: () => void;
-  setShowModelSettings: (arg: boolean) => void;
-}
-
-export const SendButtonComponent: React.FC<Props> = ({
-  sendMessageHandler,
-  setShowModelSettings,
-}) => {
-  return (
-    <div id="send-buttons-div">
-      <a
-        id="send-button"
-        href="#send"
-        role="button"
-        onClick={sendMessageHandler}
-      >
-        Send
-      </a>
-      <a
-        href="#settings"
-        role="button"
-        className="contrast"
-        onClick={() => {
-          setShowModelSettings(true);
-        }}
-      >
-        <span role="img" aria-label="settings">
-          ⚙️
-        </span>
-      </a>
-    </div>
-  );
-};
+export { ChatNavBarComponent } from './ChatNavBar';
