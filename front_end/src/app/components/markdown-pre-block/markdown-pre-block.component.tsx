@@ -75,7 +75,7 @@ export const MarkdownPreBlock = ({
   // Render multi-line syntax highlighted code block:
   return (
     <pre>
-      <div className="code-header">
+      <div className="markdown-code-header">
         {language ? <span>{language}</span> : null}
         <span onClick={copyCodeToClipboard} className="clipboard">
           <span role="img" aria-label="clipboard">
