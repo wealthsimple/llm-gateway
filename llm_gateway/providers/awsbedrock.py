@@ -22,17 +22,17 @@ import boto3
 
 from llm_gateway.constants import get_settings
 from llm_gateway.db.models import AWSBedrockRequests
+from llm_gateway.exceptions import AWSBEDROCK_EXCEPTIONS
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
 from llm_gateway.utils import StreamProcessor, max_retries
 
 settings = get_settings()
 
-AWSBEDROCK_EXCEPTIONS = ()
 
 SUPPORTED_AWSBEDROCK_ENDPOINTS = {
-    "Completion": ("Create"),
-    "Embedding": ("Create"),
+    "Completion": ("create"),
+    "Embedding": ("create"),
 }
 
 

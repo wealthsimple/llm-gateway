@@ -39,6 +39,7 @@ OPENAI_EXCEPTIONS = (
     AuthenticationError,
 )
 COHERE_EXCEPTIONS = (CohereError, CohereAPIError, CohereConnectionError)
+AWSBEDROCK_EXCEPTIONS = ()
 
 logger = get_logger(__name__)
 
@@ -59,7 +60,7 @@ class OpenAIRouteExceptionHandler(APIRoute):
 
             :param request: The request object
             :type request: Request
-            :return: Internal server error response with error message
+            :return: Response or Internal server error response with error message
             :rtype: JSONResponse
             """
             try:
@@ -92,12 +93,45 @@ class CohereRouteExceptionHandler(APIRoute):
 
             :param request: The request object
             :type request: Request
-            :return: Internal server error response with error message
+            :return: Response or Internal server error response with error message
             :rtype: JSONResponse
             """
             try:
                 response = await original_route_handler(request)
             except COHERE_EXCEPTIONS as e:
+                # print exception traceback to console
+                logger.exception(type(e), e, e.__traceback__)
+                raise HTTPException(
+                    status_code=500,
+                    detail=str(e),
+                )
+            return response
+
+        return exception_handler
+
+
+class AWSBedrockRouteExceptionHandler(APIRoute):
+    """
+    This is a route class override for the AWS Bedrock router. It is used to
+    catch common exceptions that are raised by the AWS Bedrock API and return an
+    internal server error response with its associated error message.
+    """
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        async def exception_handler(request: Request) -> JSONResponse:
+            """
+            Catch AWS Bedrock exceptions and return an internal server error response.
+
+            :param request: The request object
+            :type request: Request
+            :return: Response or Internal server error response with error message
+            :rtype: JSONResponse
+            """
+            try:
+                response = await original_route_handler(request)
+            except AWSBEDROCK_EXCEPTIONS as e:
                 # print exception traceback to console
                 logger.exception(type(e), e, e.__traceback__)
                 raise HTTPException(
