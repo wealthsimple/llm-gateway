@@ -19,6 +19,8 @@ from typing import List
 
 from pydantic import BaseModel
 
+# Cohere models
+
 
 class GenerateInput(BaseModel):
     temperature: float
@@ -34,6 +36,9 @@ class SummarizeInput(BaseModel):
     additional_command: str = ""
     model: str = "command-light"
     model_kwargs: dict = {}
+
+
+# OpenAI models
 
 
 class CompletionInput(BaseModel):
@@ -63,3 +68,92 @@ class EditInput(BaseModel):
 class EmbeddingInput(BaseModel):
     embedding_texts: List[str]
     model: str = "text-embedding-ada-002"
+
+
+# AWS Bedrock models
+
+
+class Jurrasic2UltraCompletionInput(BaseModel):
+    model: str = "ai21.j2-ultra-v1"
+    max_tokens: int = 8192
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class Jurrasic2MidCompletionInput(BaseModel):
+    model: str = "ai21.j2-mid-v1"
+    max_tokens: int = 8192
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class Claude21CompletionInput(BaseModel):
+    model: str = "anthropic.claude-v2:1"
+    max_tokens: int = 200000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class Claude20CompletionInput(BaseModel):
+    model: str = "anthropic.claude-v2"
+    max_tokens: int = 100000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class Claude13CompletionInput(BaseModel):
+    model: str = "anthropic.claude-v1"
+    max_tokens: int = 100000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class ClaudeInstantCompletionInput(BaseModel):
+    model: str = "anthropic.claude-instant-v1"
+    max_tokens: int = 100000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class Llama213bCompletionInput(BaseModel):
+    model: str = "meta.llama2-13b-chat-v1"
+    max_tokens: int = 4000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class Llama270bCompletionInput(BaseModel):
+    model: str = "meta.llama2-70b-chat-v1"
+    max_tokens: int = 4000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class TitanExpressCompletionInput(BaseModel):
+    model: str = "amazon.titan-text-express-v1"
+    max_tokens: int = 8000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class TitanLiteCompletionInput(BaseModel):
+    model: str = "amazon.titan-text-lite-v1"
+    max_tokens: int = 8000
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class TitanEmbeddingInput(BaseModel):
+    model: str = "amazon.titan-embed-text-v1"
+    max_tokens: int = 8000
+    embedding_texts: List[str]

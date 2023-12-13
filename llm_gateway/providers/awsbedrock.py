@@ -16,29 +16,39 @@
 # limitations under the License.
 
 import json
+from typing import Iterator, List, Optional, Tuple, Union
 
 import boto3
 
 from llm_gateway.constants import get_settings
+from llm_gateway.db.models import AWSBedrockRequests
+from llm_gateway.db.utils import write_record_to_db
+from llm_gateway.pii_scrubber import scrub_all
+from llm_gateway.utils import StreamProcessor, max_retries
 
 settings = get_settings()
 
+AWSBEDROCK_EXCEPTIONS = ()
+
 SUPPORTED_AWSBEDROCK_ENDPOINTS = {
-    "": ("", ""),
-    "": "",
+    "Completion": ("Create"),
+    "Embedding": ("Create"),
 }
 
 
 class AWSBedrockWrapper:
-    """ """
+    """
+    This is a simple wrapper around the AWS Bedrock API client, which adds
+    PII scrubbing before requests are sent, and DB logging after responses
+    are received
+    """
 
     def __init__(self) -> None:
         self._bedrock_runtime = self._setup_client()
 
     def _setup_client(self) -> boto3.client:
         """
-        Setup the AWS Bedrock client with the appropriate credentials
-
+        Setup the AWS Bedrock client with user defined credentials
 
         :return: The AWS Bedrock client
         """
@@ -55,10 +65,10 @@ class AWSBedrockWrapper:
         )
 
         client_kwargs = {
-            **session_kwargs,
             "aws_access_key_id": res["Credentials"]["AccessKeyId"],
             "aws_secret_access_key": res["Credentials"]["SecretAccessKey"],
             "aws_session_token": res["Credentials"]["SessionToken"],
+            **session_kwargs,
         }
 
         bedrock_runtime = session.client(
@@ -71,11 +81,11 @@ class AWSBedrockWrapper:
         """
         Check if module and endpoint are supported in AWS Bedrock, else raise an error
 
-        :param module: The name of an OpenAI module (i.e. "Completion")
+        :param module: The name of an AWS Bedrock module (i.e. "XXX")
         :type module: str
-        :param endpoint: The name of an OpenAI endpoint (i.e. "create")
+        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "XXX")
         :type endpoint: str
-        :raises NotImplementedError: Raised if OpenAI module or endpoint is not supported
+        :raises NotImplementedError: Raised if AWS Bedrock module or endpoint is not supported
         """
         if module not in SUPPORTED_AWSBEDROCK_ENDPOINTS:
             raise NotImplementedError(
@@ -87,6 +97,69 @@ class AWSBedrockWrapper:
                 f"`{endpoint}` not supported action for `{module}`"
             )
 
-    def send_awsbedrock_request(self):
+    @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
+    def _call_completion_endpoint(
+        self,
+        model: str,
+        prompt: str,
+        max_tokens: int,
+        temperature: Optional[float] = 0,
+        stream: bool = False,
+        **kwargs,
+    ):
         """ """
+        if stream:
+            return None
+
+        return None
+
+    @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
+    def _call_embedding_endpoint():
         pass
+
+    def send_awsbedrock_request(
+        self,
+        awsbedrock_module: str,
+        endpoint: str,
+        stream: bool = False,
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        prompt: Optional[str] = None,
+        temperature: Optional[float] = 0,
+        messages: Optional[list] = None,  # TODO: add pydantic type for messages
+        instruction: Optional[str] = None,
+        embedding_texts: Optional[list] = None,
+        **kwargs,
+    ) -> Tuple[Union[dict, Iterator[str]], dict]:
+        """ """
+        self._validate_awsbedrock_endpoint(awsbedrock_module, endpoint)
+
+        if messages:
+            messages = [scrub_all(message) for message in messages]
+        if prompt:
+            prompt = scrub_all(prompt)
+        if embedding_texts:
+            embedding_texts = [scrub_all(text) for text in embedding_texts]
+        if instruction:
+            instruction = scrub_all(instruction)
+
+        if awsbedrock_module == "Completion":
+            result = self._call_completion_endpoint(
+                model=model,
+                prompt=prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=stream,
+                **kwargs,
+            )
+
+    def write_logs_to_db(self, db_logs: dict):
+        """ """
+        if isinstance(db_logs["awsbedrock_response"], list):
+            db_logs["awsbedrock_response"] = "".join(db_logs["awsbedrock_response"])
+        write_record_to_db(AWSBedrockRequests(**db_logs))
+
+
+def stream_generator_awsbedrock_completion(generator: Iterator) -> Iterator[str]:
+    """ """
+    pass
