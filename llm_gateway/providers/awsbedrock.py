@@ -15,11 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import json
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Iterator, Optional, Tuple, Union
 
 import boto3
 
+from fastapi.responses import JSONResponse
 from llm_gateway.constants import get_settings
 from llm_gateway.db.models import AWSBedrockRequests
 from llm_gateway.exceptions import AWSBEDROCK_EXCEPTIONS
@@ -35,6 +37,23 @@ SUPPORTED_AWSBEDROCK_ENDPOINTS = {
     "Embedding": ("create"),
 }
 
+SUPPORTED_AWSBEDROCK_MODELS = [
+    # AI21 Labs (Jurassic2)
+    "ai21.j2-mid-v1",
+    "ai21.j2-ultra-v1",
+    # Amazon (Titan)
+    "amazon.titan-embed-text-v1",
+    "amazon.titan-text-express-v1",
+    # Anthropic (Claude)
+    "anthropic.claude-v1",
+    "anthropic.claude-v2",
+    "anthropic.claude-v2:1",
+    "anthropic.claude-instant-v1",
+    # Meta (Llama2)
+    "meta.llama2-13b-chat-v1",
+    "meta.llama2-70b-chat-v1",
+]
+
 
 class AWSBedrockWrapper:
     """
@@ -44,7 +63,7 @@ class AWSBedrockWrapper:
     """
 
     def __init__(self) -> None:
-        self._bedrock_runtime = self._setup_client()
+        self._bedrock_runtime: boto3.client = self._setup_client()
 
     def _setup_client(self) -> boto3.client:
         """
@@ -77,15 +96,22 @@ class AWSBedrockWrapper:
 
         return bedrock_runtime
 
-    def _validate_awsbedrock_endpoint(self, module: str, endpoint: str) -> None:
+    def _validate_awsbedrock_endpoint(
+            self, 
+            module: str, 
+            endpoint: str, 
+            model: str
+        ) -> None:
         """
-        Check if module and endpoint are supported in AWS Bedrock, else raise an error
+        Check if module, endpoint, and model are supported in AWS Bedrock, else raise an error
 
-        :param module: The name of an AWS Bedrock module (i.e. "XXX")
+        :param module: The name of an AWS Bedrock module (i.e. "Completion")
         :type module: str
-        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "XXX")
+        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "create")
         :type endpoint: str
-        :raises NotImplementedError: Raised if AWS Bedrock module or endpoint is not supported
+        :param model: The name of an AWS Bedrock model (i.e. "meta.llama2-70b-chat-v1")
+        :type model: str
+        :raises NotImplementedError: Raised if AWS Bedrock module, endpoint, or model is not supported
         """
         if module not in SUPPORTED_AWSBEDROCK_ENDPOINTS:
             raise NotImplementedError(
@@ -95,6 +121,11 @@ class AWSBedrockWrapper:
         if endpoint not in SUPPORTED_AWSBEDROCK_ENDPOINTS[module]:
             raise NotImplementedError(
                 f"`{endpoint}` not supported action for `{module}`"
+            )
+        
+        if model not in SUPPORTED_AWSBEDROCK_MODELS:
+            raise NotImplementedError(
+                f"`model` must be one of `{model}`"
             )
 
     @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
@@ -106,24 +137,42 @@ class AWSBedrockWrapper:
         temperature: Optional[float] = 0,
         stream: bool = False,
         **kwargs,
-    ):
-        """ """
-        if stream:
-            return None
+    ) -> JSONResponse:
+        """ 
+        
+        """
+        body = {
+            "prompt": prompt,
+            "temperature": temperature,
+            "maxTokens": max_tokens,
+            **kwargs,
+        }
 
-        return None
+        if stream:
+            return self._bedrock_runtime.invoke_model_with_response_stream(
+                modelId=model,
+                body=json.dumps(body),
+                contentType="application/json",
+            )
+            # json.loads(res["body"].read())
+        
+        return self._bedrock_runtime.invoke_model(
+            modelId=model,
+            body=json.dumps(body),
+            contentType="application/json",
+        )
 
     @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
-    def _call_embedding_endpoint():
+    def _call_embedding_endpoint() -> JSONResponse:
         pass
 
     def send_awsbedrock_request(
         self,
         awsbedrock_module: str,
         endpoint: str,
+        model: str,
+        max_tokens: int,
         stream: bool = False,
-        model: Optional[str] = None,
-        max_tokens: Optional[int] = None,
         prompt: Optional[str] = None,
         temperature: Optional[float] = 0,
         messages: Optional[list] = None,  # TODO: add pydantic type for messages
@@ -132,7 +181,7 @@ class AWSBedrockWrapper:
         **kwargs,
     ) -> Tuple[Union[dict, Iterator[str]], dict]:
         """ """
-        self._validate_awsbedrock_endpoint(awsbedrock_module, endpoint)
+        self._validate_awsbedrock_endpoint(awsbedrock_module, endpoint, model)
 
         if messages:
             messages = [scrub_all(message) for message in messages]
@@ -152,6 +201,42 @@ class AWSBedrockWrapper:
                 stream=stream,
                 **kwargs,
             )
+            user_input = prompt
+        elif awsbedrock_module == "Embedding":
+            result = self._call_embedding_endpoint(
+                model=model,
+                embedding_texts=embedding_texts,
+                instruction=instruction,
+                **kwargs,
+            )
+            user_input = str(embedding_texts)
+
+        if not stream:
+            awsbedrock_response = result # *****Check what this is returning
+            cached_response = awsbedrock_response
+        elif awsbedrock_module == "Completion":
+            stream_processor = StreamProcessor(
+                stream_processor=stream_generator_awsbedrock_completion
+            )
+            awsbedrock_response = stream_processor.process_stream(result)
+            cached_response = stream_processor.get_cached_streamed_response()
+            # The cached streaming response is an empty list at this point.
+            # Once the stream is returned to the user it will be populated
+            # Since the DB write happens after the stream, this will always be populated
+
+        db_record = {
+            "user_input": user_input,
+            "user_email": None,
+            "awsbedrock_response": cached_response,
+            "awsbedrock_model": model,
+            "temperature": temperature,
+            "extras": json.dumps(kwargs),
+            "awsbedrock_endpoint": awsbedrock_module,
+            "created_at": datetime.datetime.now(),
+        }
+
+        return awsbedrock_response, db_record
+        
 
     def write_logs_to_db(self, db_logs: dict):
         """ """
@@ -162,4 +247,11 @@ class AWSBedrockWrapper:
 
 def stream_generator_awsbedrock_completion(generator: Iterator) -> Iterator[str]:
     """ """
-    pass
+    for chunk in generator:
+        answer = ""
+        try:
+            current_response = None
+            answer += current_response
+        except KeyError:
+            pass
+        yield answer

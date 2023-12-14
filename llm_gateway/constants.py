@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str]
     COHERE_API_KEY: Optional[str]
 
+    # AWS Client Keys
+    AWS_REGION: Optional[str]
+    AWS_PROFILE: Optional[str]
+    AWS_ROLE_ARN: Optional[str]
+
     # Postgres Database
     DATABASE_URL: str
 
