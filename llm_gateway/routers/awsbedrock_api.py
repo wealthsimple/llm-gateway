@@ -21,18 +21,21 @@ from starlette.responses import JSONResponse
 
 from llm_gateway.exceptions import AWSBedrockRouteExceptionHandler
 from llm_gateway.models import (
-    AWSBedrockCompletionInput,
-    AWSBedrockEmbeddingInput,
+    AWSBedrockChatInput,
+    AWSBedrockEmbedInput,
+    AWSBedrockImageInput,
+    AWSBedrockTextInput,
 )
 from llm_gateway.providers.awsbedrock import AWSBedrockWrapper
 from llm_gateway.utils import reraise_500
 
 router = APIRouter(route_class=AWSBedrockRouteExceptionHandler)
 
-@router.post("/completion")
+
+@router.post("/chat")
 @reraise_500
 def get_completion(
-    user_input: AWSBedrockCompletionInput, background_tasks: BackgroundTasks
+    user_input: AWSBedrockChatInput, background_tasks: BackgroundTasks
 ) -> JSONResponse:
     """
     Use the AWS Bedrock completion API to generate a response to a prompt
@@ -44,8 +47,7 @@ def get_completion(
     """
     wrapper = AWSBedrockWrapper()
     resp, logs = wrapper.send_awsbedrock_request(
-        "Completion",
-        "create",
+        awsbedrock_module="Chat",
         model=user_input.model,
         max_tokens=user_input.max_tokens,
         prompt=user_input.prompt,
@@ -56,10 +58,11 @@ def get_completion(
     background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
     return JSONResponse(resp)
 
-@router.post("/completion/streaming")
+
+@router.post("/chat/streaming")
 @reraise_500
 def get_completion_stream(
-    user_input: AWSBedrockCompletionInput, background_tasks: BackgroundTasks
+    user_input: AWSBedrockChatInput, background_tasks: BackgroundTasks
 ) -> StreamingResponse:
     """
     Use the AWS Bedrock completion API to generate a stream response to a prompt
@@ -84,25 +87,33 @@ def get_completion_stream(
     return StreamingResponse(resp, media_type="text/plain")
 
 
-@router.post("/embedding")
+@router.post("/text")
 @reraise_500
-def get_embedding(
-    user_input: AWSBedrockEmbeddingInput, background_tasks: BackgroundTasks
-) -> JSONResponse:
-    """
-    Use AWS Bedrock to turn a list of prompts into vectors
+def get_completion_stream(
+    user_input: AWSBedrockTextInput, background_tasks: BackgroundTasks
+) -> StreamingResponse:
+    pass
 
-    :param user_input: Inputs to the AWS Bedrock embedding API, including model and list of prompts
-    :type user_input: AWSBedrockInput
-    :return: List of embeddings (a vector for each input prompt) and metadata
-    :rtype: JSONResponse
-    """
-    wrapper = AWSBedrockWrapper()
-    resp, logs = wrapper.send_awsbedrock_request(
-        "Embedding",
-        "create",
-        embedding_texts=user_input.embedding_texts,
-        model=user_input.model,
-    )
-    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
-    return JSONResponse(resp)
+
+@router.post("/text/streaming")
+@reraise_500
+def get_completion_stream(
+    user_input: AWSBedrockTextInput, background_tasks: BackgroundTasks
+) -> StreamingResponse:
+    pass
+
+
+@router.post("/embed")
+@reraise_500
+def get_completion_stream(
+    user_input: AWSBedrockEmbedInput, background_tasks: BackgroundTasks
+) -> StreamingResponse:
+    pass
+
+
+@router.post("/image")
+@reraise_500
+def get_completion_stream(
+    user_input: AWSBedrockImageInput, background_tasks: BackgroundTasks
+) -> StreamingResponse:
+    pass

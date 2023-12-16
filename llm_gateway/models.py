@@ -65,7 +65,7 @@ class EmbeddingInput(BaseModel):
     model: str = "text-embedding-ada-002"
 
 
-class AWSBedrockCompletionInput(BaseModel):
+class AWSBedrockInput(BaseModel):
     model: str
     max_tokens: int
     prompt: str
@@ -73,7 +73,9 @@ class AWSBedrockCompletionInput(BaseModel):
     model_kwargs: dict = {}
 
 
-class AWSBedrockEmbeddingInput(BaseModel):
-    model: str
+class AmazonTitanCompletionInput(AWSBedrockInput):
+    model: str = ""
     max_tokens: int
-    embedding_texts: List[str]
+    prompt: str
+    temperature: float = 0
+    model_kwargs: dict = {}

@@ -20,12 +20,12 @@ import json
 from typing import Iterator, Optional, Tuple, Union
 
 import boto3
-
 from fastapi.responses import JSONResponse
+
 from llm_gateway.constants import get_settings
 from llm_gateway.db.models import AWSBedrockRequests
-from llm_gateway.exceptions import AWSBEDROCK_EXCEPTIONS
 from llm_gateway.db.utils import write_record_to_db
+from llm_gateway.exceptions import AWSBEDROCK_EXCEPTIONS
 from llm_gateway.pii_scrubber import scrub_all
 from llm_gateway.utils import StreamProcessor, max_retries
 
@@ -33,26 +33,35 @@ settings = get_settings()
 
 
 SUPPORTED_AWSBEDROCK_ENDPOINTS = {
-    "Completion": ("create"),
-    "Embedding": ("create"),
+    "Chat": [
+        "meta.llama2-13b-chat-v1",
+        "meta.llama2-70b-chat-v1",
+    ],
+    "Text": [
+        "ai21.j2-mid-v1",
+        "ai21.j2-ultra-v1",
+        "amazon.titan-text-lite-v1",
+        "amazon.titan-text-express-v1",
+        "anthropic.claude-v1",
+        "anthropic.claude-v2",
+        "anthropic.claude-v2:1",
+        "anthropic.claude-instant-v1",
+        "cohere.command-text-v14",
+        "cohere.command-light-text-v14",
+        # "meta.llama2-13b-v1",
+        # "meta.llama2-70b-v1",
+    ],
+    "Embed": [
+        "amazon.titan-embed-text-v1",
+        "cohere.embed-english-v3",
+        "cohere.embed-multilingual-v3",
+    ],
+    "Image": [
+        "amazon.titan-image-generator-v1",
+        "stability.stable-diffusion-xl-v0",
+        "stability.stable-diffusion-xl-v1",
+    ],
 }
-
-SUPPORTED_AWSBEDROCK_MODELS = [
-    # AI21 Labs (Jurassic2)
-    "ai21.j2-mid-v1",
-    "ai21.j2-ultra-v1",
-    # Amazon (Titan)
-    "amazon.titan-embed-text-v1",
-    "amazon.titan-text-express-v1",
-    # Anthropic (Claude)
-    "anthropic.claude-v1",
-    "anthropic.claude-v2",
-    "anthropic.claude-v2:1",
-    "anthropic.claude-instant-v1",
-    # Meta (Llama2)
-    "meta.llama2-13b-chat-v1",
-    "meta.llama2-70b-chat-v1",
-]
 
 
 class AWSBedrockWrapper:
@@ -67,9 +76,9 @@ class AWSBedrockWrapper:
 
     def _setup_client(self) -> boto3.client:
         """
-        Setup the AWS Bedrock client with user defined credentials
+        Setup the AWS Bedrock client with users credentials
 
-        :return: The AWS Bedrock client
+        :return: AWS Bedrock client
         """
         session_kwargs = {
             "region_name": settings.AWS_REGION,
@@ -91,88 +100,218 @@ class AWSBedrockWrapper:
         }
 
         bedrock_runtime = session.client(
-            service_name="bedrock-runtime", config=0, **client_kwargs
+            service_name="bedrock-runtime",
+            config=None,  # TODO : Fix this
+            **client_kwargs,
         )
 
         return bedrock_runtime
 
-    def _validate_awsbedrock_endpoint(
-            self, 
-            module: str, 
-            endpoint: str, 
-            model: str
-        ) -> None:
+    def _validate_awsbedrock_endpoint(self, endpoint: str, model: str) -> None:
         """
-        Check if module, endpoint, and model are supported in AWS Bedrock, else raise an error
+        Check if endpoint and model are supported in AWS Bedrock, else raise an error
 
-        :param module: The name of an AWS Bedrock module (i.e. "Completion")
-        :type module: str
-        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "create")
+        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "Chat")
         :type endpoint: str
         :param model: The name of an AWS Bedrock model (i.e. "meta.llama2-70b-chat-v1")
         :type model: str
         :raises NotImplementedError: Raised if AWS Bedrock module, endpoint, or model is not supported
         """
-        if module not in SUPPORTED_AWSBEDROCK_ENDPOINTS:
+        if endpoint not in SUPPORTED_AWSBEDROCK_ENDPOINTS:
             raise NotImplementedError(
                 f"`awsbedrock_endpoint` must be one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS.keys()}`"
             )
 
-        if endpoint not in SUPPORTED_AWSBEDROCK_ENDPOINTS[module]:
+        if model not in SUPPORTED_AWSBEDROCK_ENDPOINTS[endpoint]:
             raise NotImplementedError(
-                f"`{endpoint}` not supported action for `{module}`"
-            )
-        
-        if model not in SUPPORTED_AWSBEDROCK_MODELS:
-            raise NotImplementedError(
-                f"`model` must be one of `{model}`"
+                f"`model` must be one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS[endpoint]} for endpoint `{endpoint}`"
             )
 
+    def _structure_model_body(
+        self,
+        awsbedrock_module: str,
+        model: str,
+        max_tokens: int,
+        messages: Optional[list] = None,
+        prompt: Optional[str] = None,
+        embedding_texts: Optional[list] = None,
+        instruction: Optional[str] = None,
+        temperature: Optional[float] = 0,
+        **kwargs,
+    ) -> Tuple[dict, str]:
+        """
+        Structure the body of the request to the AWS Bedrock API (Provider and Model specific)
+
+        :param awsbedrock_module: Valid AWS Bedrock module to hit (i.e. "Chat")
+        :type awsbedrock_module: str
+        :param model: The name of an AWS Bedrock model (i.e. "meta.llama2-70b-chat-v1")
+        :type model: str
+        :param max_tokens: The maximum number of tokens to generate
+        :type max_tokens: int
+        :param messages: List of messages for chat endpoint
+        :type messages: Optional[list]
+        :param prompt: String prompt, defaults to None
+        :type prompt: Optional[str]
+        :param embedding_texts: List of prompts, defaults to None
+        :type embedding_texts: Optional[list]
+        :param instruction: Instructions for model, defaults to None
+        :type instruction: Optional[str]
+        :param temperature: The temperature of the model, defaults to 0
+        :type temperature: Optional[float]
+        :param kwargs: other model-specific parameters to pass to AWS Bedrock. (ie- topP, stop_sequences, seed, etc.)
+        :type kwargs: Optional[dict]
+        :return: Body of the model-specific request to the AWS Bedrock API and the strigified user input
+        :rtype: Tuple[dict, str]
+        """
+
+        # strips the model provider
+        model_prefix = model.split(".")[0]
+
+        match model_prefix:
+            case "ai21":
+                return (
+                    {
+                        "prompt": prompt,
+                        "maxTokens": max_tokens,
+                        "temperature": temperature,
+                        "topP": 250,
+                        "stop_sequences": [],
+                        "countPenalty": {"scale": 0},
+                        "presencePenalty": {"scale": 0},
+                        "frequencyPenalty": {"scale": 0},
+                    },
+                    prompt,
+                )
+
+            case "amazon":
+                if awsbedrock_module == "Text":
+                    return (
+                        {
+                            "inputText": prompt,
+                            "textGenerationConfig": {
+                                "maxTokenCount": max_tokens,
+                                "stopSequences": [],
+                                "temperature": temperature,
+                                "topP": 1,
+                            },
+                        },
+                        prompt,
+                    )
+                elif awsbedrock_module == "Embed":
+                    return (
+                        {
+                            "inputText": embedding_texts,  # TODO : recieves string but this is a list
+                        },
+                        str(embedding_texts),
+                    )
+                elif awsbedrock_module == "Image":
+                    return (
+                        {
+                            "taskType": "TEXT_IMAGE",
+                            "textToImageParams": {
+                                "text": prompt,
+                                "negativeText": "<text>",  # TODO : fix this
+                            },
+                            "imageGenerationConfig": {
+                                "numberOfImages": 1,
+                                "quality": "standard",
+                                "height": 1024,
+                                "width": 1024,
+                                "cfgScale": 8.0,
+                                "seed": 0,
+                            },
+                        },
+                        prompt,
+                    )
+
+            case "anthropic":
+                return (
+                    {
+                        "prompt": f"\n\nHuman: {prompt}\n\nAssistant: {instruction}",
+                        "max_tokens_to_sample": max_tokens,
+                        "temperature": temperature,
+                        "top_k": 250,
+                        "top_p": 1,
+                        "stop_sequences": ["\n\nHuman:"],
+                        "anthropic_version": "bedrock-2023-05-31",
+                    },
+                    prompt,
+                )
+
+            case "cohere":
+                if awsbedrock_module == "Text":
+                    return (
+                        {
+                            "prompt": prompt,
+                            "max_tokens": max_tokens,
+                            "temperature": temperature,
+                            "return_likelihood": "GENERATION",
+                        },
+                        prompt,
+                    )
+                elif awsbedrock_module == "Embed":
+                    return (
+                        {"texts": embedding_texts, "input_type": "search_document"},
+                        str(embedding_texts),
+                    )
+
+            case "meta":
+                return (
+                    {
+                        "prompt": messages,  # TODO : recieves string but this is a list
+                        "max_gen_len": max_tokens,
+                        "temperature": temperature,
+                        "top_p": 0.9,
+                    },
+                    str(messages),
+                )
+
+            case "stability":
+                return (
+                    {
+                        "text_prompts": [
+                            {
+                                "text": prompt,
+                            }
+                        ],
+                        "cfg_scale": 10,
+                        "seed": 0,
+                        "steps": 50,
+                    },
+                    prompt,
+                )
+
     @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
-    def _call_completion_endpoint(
+    def _invoke_awsbedrock_model(
         self,
         model: str,
-        prompt: str,
-        max_tokens: int,
-        temperature: Optional[float] = 0,
+        body: dict,
         stream: bool = False,
-        **kwargs,
     ) -> JSONResponse:
-        """ 
-        
-        """
-        body = {
-            "prompt": prompt,
-            "temperature": temperature,
-            "maxTokens": max_tokens,
-            **kwargs,
-        }
+        """ """
 
         if stream:
             return self._bedrock_runtime.invoke_model_with_response_stream(
                 modelId=model,
-                body=json.dumps(body),
                 contentType="application/json",
+                accept="*/*",
+                body=json.dumps(body),
             )
             # json.loads(res["body"].read())
-        
+
         return self._bedrock_runtime.invoke_model(
             modelId=model,
-            body=json.dumps(body),
             contentType="application/json",
+            accept="*/*",
+            body=json.dumps(body),
         )
-
-    @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
-    def _call_embedding_endpoint() -> JSONResponse:
-        pass
 
     def send_awsbedrock_request(
         self,
         awsbedrock_module: str,
-        endpoint: str,
-        model: str,
-        max_tokens: int,
         stream: bool = False,
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
         prompt: Optional[str] = None,
         temperature: Optional[float] = 0,
         messages: Optional[list] = None,  # TODO: add pydantic type for messages
@@ -180,8 +319,33 @@ class AWSBedrockWrapper:
         embedding_texts: Optional[list] = None,
         **kwargs,
     ) -> Tuple[Union[dict, Iterator[str]], dict]:
-        """ """
-        self._validate_awsbedrock_endpoint(awsbedrock_module, endpoint, model)
+        """
+        Send a request to the AWS Bedrock API and return response and logs for db write
+
+        :param openai_module: Valid AWS Bedrock module to hit (i.e. "Chat")
+        :type openai_module: str
+        :param stream: Whether to stream the response, defaults to False
+        :type stream: Optional[bool]
+        :param model: Model to hit, defaults to None
+        :type model: Optional[str]
+        :param max_tokens: Maximum tokens for prompt and completion, defaults to None
+        :type max_tokens: Optional[int]
+        :param prompt: _description_, defaults to None
+        :type prompt: String prompt, if calling completion or edits, optional
+        :param temperature: Temperature altering the creativity of the response, defaults to 0
+        :type temperature: Optional[float]
+        :param messages: list of messages for chat endpoint
+        :type messages: Optional[list]
+        :param instruction: How to perform edits, if calling edits, defaults to None
+        :type instruction: Optional[str]
+        :param embedding_texts: List of prompts, if calling embedding, defaults to None
+        :type embedding_texts: Optional[list]
+        :param kwargs: other parameters to pass to openai api. (ie- functions, function_call, etc.)
+        :type kwargs: Optional[dict]
+        :return: Flattened response from OpenAI
+        :rtype: _type_
+        """
+        self._validate_awsbedrock_endpoint(endpoint=awsbedrock_module, model=model)
 
         if messages:
             messages = [scrub_all(message) for message in messages]
@@ -192,31 +356,32 @@ class AWSBedrockWrapper:
         if instruction:
             instruction = scrub_all(instruction)
 
-        if awsbedrock_module == "Completion":
-            result = self._call_completion_endpoint(
-                model=model,
-                prompt=prompt,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                stream=stream,
-                **kwargs,
-            )
-            user_input = prompt
-        elif awsbedrock_module == "Embedding":
-            result = self._call_embedding_endpoint(
-                model=model,
-                embedding_texts=embedding_texts,
-                instruction=instruction,
-                **kwargs,
-            )
-            user_input = str(embedding_texts)
+        body = self._structure_model_body(
+            model=model,
+            messages=messages,
+            prompt=prompt,
+            embedding_texts=embedding_texts,
+            instructions=instruction,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            instruction=instruction,
+            **kwargs,
+        )
+
+        result, user_input = self._invoke_awsbedrock_model(model, body, stream)
 
         if not stream:
-            awsbedrock_response = result # *****Check what this is returning
+            awsbedrock_response = result  # TODO : Check what this is returning
             cached_response = awsbedrock_response
-        elif awsbedrock_module == "Completion":
+        elif awsbedrock_module == "Chat":
             stream_processor = StreamProcessor(
-                stream_processor=stream_generator_awsbedrock_completion
+                stream_processor=stream_generator_awsbedrock_chat
+            )
+            awsbedrock_response = stream_processor.process_stream(result)
+            cached_response = stream_processor.get_cached_streamed_response()
+        elif awsbedrock_module == "Text":
+            stream_processor = StreamProcessor(
+                stream_processor=stream_generator_awsbedrock_text
             )
             awsbedrock_response = stream_processor.process_stream(result)
             cached_response = stream_processor.get_cached_streamed_response()
@@ -236,7 +401,6 @@ class AWSBedrockWrapper:
         }
 
         return awsbedrock_response, db_record
-        
 
     def write_logs_to_db(self, db_logs: dict):
         """ """
@@ -245,7 +409,7 @@ class AWSBedrockWrapper:
         write_record_to_db(AWSBedrockRequests(**db_logs))
 
 
-def stream_generator_awsbedrock_completion(generator: Iterator) -> Iterator[str]:
+def stream_generator_awsbedrock_chat(generator: Iterator) -> Iterator[str]:
     """ """
     for chunk in generator:
         answer = ""
@@ -255,3 +419,8 @@ def stream_generator_awsbedrock_completion(generator: Iterator) -> Iterator[str]
         except KeyError:
             pass
         yield answer
+
+
+def stream_generator_awsbedrock_text(generator: Iterator) -> Iterator[str]:
+    """ """
+    pass
