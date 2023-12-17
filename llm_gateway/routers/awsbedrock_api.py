@@ -50,9 +50,9 @@ def get_completion(
         awsbedrock_module="Chat",
         model=user_input.model,
         max_tokens=user_input.max_tokens,
-        prompt=user_input.prompt,
+        messages=user_input.messages,
         temperature=user_input.temperature,
-        **user_input.model_kwargs,
+        **user_input.kwargs,
     )
 
     background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
@@ -74,13 +74,12 @@ def get_completion_stream(
     """
     wrapper = AWSBedrockWrapper()
     resp, logs = wrapper.send_awsbedrock_request(
-        "Completion",
-        "create",
+        awsbedrock_module="Chat",
         model=user_input.model,
         max_tokens=user_input.max_tokens,
-        prompt=user_input.prompt,
+        messages=user_input.messages,
         temperature=user_input.temperature,
-        **user_input.model_kwargs,
+        **user_input.kwargs,
     )
 
     background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
@@ -91,8 +90,20 @@ def get_completion_stream(
 @reraise_500
 def get_completion_stream(
     user_input: AWSBedrockTextInput, background_tasks: BackgroundTasks
-) -> StreamingResponse:
-    pass
+) -> JSONResponse:
+    """"""
+    wrapper = AWSBedrockWrapper()
+    resp, logs = wrapper.send_awsbedrock_request(
+        awsbedrock_module="Text",
+        model=user_input.model,
+        max_tokens=user_input.max_tokens,
+        prompt=user_input.prompt,
+        temperature=user_input.temperature,
+        **user_input.kwargs,
+    )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return JSONResponse(resp)
 
 
 @router.post("/text/streaming")
@@ -100,20 +111,55 @@ def get_completion_stream(
 def get_completion_stream(
     user_input: AWSBedrockTextInput, background_tasks: BackgroundTasks
 ) -> StreamingResponse:
-    pass
+    """"""
+    wrapper = AWSBedrockWrapper()
+    resp, logs = wrapper.send_awsbedrock_request(
+        awsbedrock_module="Text",
+        model=user_input.model,
+        max_tokens=user_input.max_tokens,
+        prompt=user_input.prompt,
+        temperature=user_input.temperature,
+        **user_input.kwargs,
+    )
 
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return StreamingResponse(resp, media_type="text/plain")
 
 @router.post("/embed")
 @reraise_500
 def get_completion_stream(
     user_input: AWSBedrockEmbedInput, background_tasks: BackgroundTasks
-) -> StreamingResponse:
-    pass
+) -> JSONResponse:
+    """"""
+    wrapper = AWSBedrockWrapper()
+    resp, logs = wrapper.send_awsbedrock_request(
+        awsbedrock_module="Embed",
+        model=user_input.model,
+        max_tokens=user_input.max_tokens,
+        embedding_texts=user_input.embedding_texts,
+        temperature=user_input.temperature,
+        **user_input.kwargs,
+    )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return JSONResponse(resp)
 
 
 @router.post("/image")
 @reraise_500
 def get_completion_stream(
     user_input: AWSBedrockImageInput, background_tasks: BackgroundTasks
-) -> StreamingResponse:
-    pass
+) -> JSONResponse:
+    """"""
+    wrapper = AWSBedrockWrapper()
+    resp, logs = wrapper.send_awsbedrock_request(
+        awsbedrock_module="Image",
+        model=user_input.model,
+        max_tokens=user_input.max_tokens,
+        prompt=user_input.prompt,
+        temperature=user_input.temperature,
+        **user_input.kwargs,
+    )
+
+    background_tasks.add_task(wrapper.write_logs_to_db, db_logs=logs)
+    return JSONResponse(resp)

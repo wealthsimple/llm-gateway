@@ -72,40 +72,11 @@ class AWSBedrockWrapper:
     """
 
     def __init__(self) -> None:
-        self._bedrock_runtime: boto3.client = self._setup_client()
-
-    def _setup_client(self) -> boto3.client:
-        """
-        Setup the AWS Bedrock client with users credentials
-
-        :return: AWS Bedrock client
-        """
-        session_kwargs = {
-            "region_name": settings.AWS_REGION,
-            "profile_name": settings.AWS_PROFILE,
-        }
-
-        session = boto3.Session(**session_kwargs)
-
-        res = session.client("sts").assume_role(
-            RoleArn=settings.AWS_ROLE_ARN,
-            RoleSessionName=settings.APP_NAME,
-        )
-
-        client_kwargs = {
-            "aws_access_key_id": res["Credentials"]["AccessKeyId"],
-            "aws_secret_access_key": res["Credentials"]["SecretAccessKey"],
-            "aws_session_token": res["Credentials"]["SessionToken"],
-            **session_kwargs,
-        }
-
-        bedrock_runtime = session.client(
+        self._bedrock_runtime = boto3.client(
             service_name="bedrock-runtime",
-            config=None,  # TODO : Fix this
-            **client_kwargs,
+            region_name=settings.AWS_REGION,
         )
 
-        return bedrock_runtime
 
     def _validate_awsbedrock_endpoint(self, endpoint: str, model: str) -> None:
         """
@@ -135,7 +106,7 @@ class AWSBedrockWrapper:
         messages: Optional[list] = None,
         prompt: Optional[str] = None,
         embedding_texts: Optional[list] = None,
-        instruction: Optional[str] = None,
+        instructions: Optional[str] = None,
         temperature: Optional[float] = 0,
         **kwargs,
     ) -> Tuple[dict, str]:
@@ -174,11 +145,7 @@ class AWSBedrockWrapper:
                         "prompt": prompt,
                         "maxTokens": max_tokens,
                         "temperature": temperature,
-                        "topP": 250,
-                        "stop_sequences": [],
-                        "countPenalty": {"scale": 0},
-                        "presencePenalty": {"scale": 0},
-                        "frequencyPenalty": {"scale": 0},
+                        **kwargs,
                     },
                     prompt,
                 )
@@ -190,9 +157,8 @@ class AWSBedrockWrapper:
                             "inputText": prompt,
                             "textGenerationConfig": {
                                 "maxTokenCount": max_tokens,
-                                "stopSequences": [],
                                 "temperature": temperature,
-                                "topP": 1,
+                                **kwargs,                                
                             },
                         },
                         prompt,
@@ -213,12 +179,7 @@ class AWSBedrockWrapper:
                                 "negativeText": "<text>",  # TODO : fix this
                             },
                             "imageGenerationConfig": {
-                                "numberOfImages": 1,
-                                "quality": "standard",
-                                "height": 1024,
-                                "width": 1024,
-                                "cfgScale": 8.0,
-                                "seed": 0,
+                                **kwargs,
                             },
                         },
                         prompt,
@@ -227,13 +188,11 @@ class AWSBedrockWrapper:
             case "anthropic":
                 return (
                     {
-                        "prompt": f"\n\nHuman: {prompt}\n\nAssistant: {instruction}",
+                        "prompt": f"\n\nHuman: {prompt}\n\nAssistant: {instructions}",
                         "max_tokens_to_sample": max_tokens,
                         "temperature": temperature,
-                        "top_k": 250,
-                        "top_p": 1,
-                        "stop_sequences": ["\n\nHuman:"],
                         "anthropic_version": "bedrock-2023-05-31",
+                        **kwargs,
                     },
                     prompt,
                 )
@@ -261,7 +220,7 @@ class AWSBedrockWrapper:
                         "prompt": messages,  # TODO : recieves string but this is a list
                         "max_gen_len": max_tokens,
                         "temperature": temperature,
-                        "top_p": 0.9,
+                        **kwargs,
                     },
                     str(messages),
                 )
@@ -274,14 +233,12 @@ class AWSBedrockWrapper:
                                 "text": prompt,
                             }
                         ],
-                        "cfg_scale": 10,
-                        "seed": 0,
-                        "steps": 50,
+                        **kwargs
                     },
                     prompt,
                 )
 
-    @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
+    # @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
     def _invoke_awsbedrock_model(
         self,
         model: str,
@@ -291,20 +248,21 @@ class AWSBedrockWrapper:
         """ """
 
         if stream:
-            return self._bedrock_runtime.invoke_model_with_response_stream(
+            res = self._bedrock_runtime.invoke_model_with_response_stream(
                 modelId=model,
                 contentType="application/json",
                 accept="*/*",
                 body=json.dumps(body),
             )
-            # json.loads(res["body"].read())
 
-        return self._bedrock_runtime.invoke_model(
+        res = self._bedrock_runtime.invoke_model(
             modelId=model,
             contentType="application/json",
             accept="*/*",
             body=json.dumps(body),
         )
+
+        return json.loads(res.get("body").read())
 
     def send_awsbedrock_request(
         self,
@@ -356,7 +314,8 @@ class AWSBedrockWrapper:
         if instruction:
             instruction = scrub_all(instruction)
 
-        body = self._structure_model_body(
+        body, user_input = self._structure_model_body(
+            awsbedrock_module=awsbedrock_module,
             model=model,
             messages=messages,
             prompt=prompt,
@@ -364,11 +323,10 @@ class AWSBedrockWrapper:
             instructions=instruction,
             max_tokens=max_tokens,
             temperature=temperature,
-            instruction=instruction,
             **kwargs,
         )
 
-        result, user_input = self._invoke_awsbedrock_model(model, body, stream)
+        result = self._invoke_awsbedrock_model(model, body, stream)
 
         if not stream:
             awsbedrock_response = result  # TODO : Check what this is returning

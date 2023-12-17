@@ -25,7 +25,7 @@ class GenerateInput(BaseModel):
     prompt: str
     max_tokens: int = 50
     model: str = "command-light"
-    model_kwargs: dict = {}
+    kwargs: dict = {}
 
 
 class SummarizeInput(BaseModel):
@@ -33,7 +33,7 @@ class SummarizeInput(BaseModel):
     prompt: str
     additional_command: str = ""
     model: str = "command-light"
-    model_kwargs: dict = {}
+    kwargs: dict = {}
 
 
 class CompletionInput(BaseModel):
@@ -41,7 +41,7 @@ class CompletionInput(BaseModel):
     prompt: str
     max_tokens: int = 50
     temperature: float = 0
-    model_kwargs: dict = {}
+    kwargs: dict = {}
 
 
 class ChatCompletionInput(BaseModel):
@@ -51,7 +51,7 @@ class ChatCompletionInput(BaseModel):
     ]
     temperature: float = 0
     max_tokens: int = 2000
-    model_kwargs: dict = {}
+    kwargs: dict = {}
 
 
 class EditInput(BaseModel):
@@ -65,17 +65,33 @@ class EmbeddingInput(BaseModel):
     model: str = "text-embedding-ada-002"
 
 
-class AWSBedrockInput(BaseModel):
+class AWSBedrockChatInput(BaseModel):
     model: str
     max_tokens: int
-    prompt: str
+    messages: List[str] = []
     temperature: float = 0
-    model_kwargs: dict = {}
+    kwargs: dict = {}
 
 
-class AmazonTitanCompletionInput(AWSBedrockInput):
-    model: str = ""
+class AWSBedrockTextInput(BaseModel):
+    model: str
     max_tokens: int
-    prompt: str
+    prompt: str = ""
     temperature: float = 0
-    model_kwargs: dict = {}
+    kwargs: dict = {}
+
+
+class AWSBedrockEmbedInput(BaseModel):
+    model: str
+    max_tokens: int
+    embedding_texts: List[str] = []
+    temperature: float = 0
+    kwargs: dict = {}
+
+
+class AWSBedrockImageInput(BaseModel):
+    model: str
+    max_tokens: int
+    prompt: str = ""
+    temperature: float = 0
+    kwargs: dict = {}
