@@ -55,6 +55,37 @@ const CohereParseResponse = (response: any) => {
   return response.data;
 };
 
+const AWSBedrockLlamaChatParseResponse = (response: any) => {
+  return response.generation
+}
+
+const AWSBedrockJurassic2TextParseResponse = (response: any) => {
+  return response.completions[0].data.text;
+}
+
+const AWSBedrockTitanTextParseResponse = (response: any) => {
+  return response.results[0].outputText;
+}
+
+const AWSBedrockTitanEmbedParseResponse = (response: any) => {
+  // return response with new line character between each vector point
+  return (response.embedding as string[]).map((value: string) => value + "\n").join('');
+}
+
+const AWSBedrockClaudeTextParseResponse = (response: any) => {
+  return response.completion;
+}
+
+const AWSBedrockCohereTextParseResponse = (response: any) => {
+  return response.generations[0].text;
+}
+
+const AWSBedrockCohereEmbedParseResponse = (response: any) => {
+  // return response with new line character between each vector point
+  return (response.embeddings[0] as string[]).map((value: string) => value + "\n").join('');
+}
+
+
 const DEFAULT_INITIAL_PROMPT = [
   { role: Role.system, content: 'You are an intelligent assistant.' },
   { role: Role.user, content: 'Hello!' },
@@ -163,7 +194,7 @@ export const modelChoices: Models = {
   meta_llama2_13b: {
     name: 'Llama 2 13B',
     distributor: 'Meta',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/chat`,
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
     description:
       'Fine-tuned model in the parameter size of 13B. Suitable for smaller-scale tasks such as text classification, sentiment analysis, and language translation.',
     initialPrompt: DEFAULT_INITIAL_PROMPT,
@@ -178,20 +209,21 @@ export const modelChoices: Models = {
     },
     requestBody: (req: IRequestBody) =>
       ({
-        messages: req.messages,
+        prompt: req.messages.at(-1)?.content,
         model: 'meta.llama2-13b-chat-v1',
-        max_tokens: 500, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, kwargs)
+        max_tokens: 500, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, model_kwargs)
         temperature: req.temperature,
-        kwargs: {
+        instructions: DEFAULT_INITIAL_PROMPT[0].content,
+        model_kwargs: {
           "top_p": 0.9
         },
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
+    responseHandler: AWSBedrockLlamaChatParseResponse,
   },
   meta_llama2_70b: {
     name: 'Llama 2 70B',
     distributor: 'Meta',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/chat`,
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
     description:
       'Fine-tuned model in the parameter size of 70B. Suitable for larger-scale tasks such as language modeling, text generation, and dialogue systems.',
     initialPrompt: DEFAULT_INITIAL_PROMPT,
@@ -206,18 +238,19 @@ export const modelChoices: Models = {
     },
     requestBody: (req: IRequestBody) =>
       ({
-        messages: req.messages,
+        prompt: req.messages.at(-1)?.content,
         model: 'meta.llama2-70b-chat-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        instruction: DEFAULT_INITIAL_PROMPT[0].content,
+        model_kwargs: {
           "top_p": 0.9
         },
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  }, 
+    responseHandler: AWSBedrockLlamaChatParseResponse,
+  },
   ai21_jurassic2_mid: {
-    name: 'Jurassic2 Mid',
+    name: 'Jurassic-2 Mid',
     distributor: 'AI21 Labs',
     apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
     description:
@@ -238,24 +271,23 @@ export const modelChoices: Models = {
         model: 'ai21.j2-mid-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
-          "topP":250,
-          "stop_sequences":[],
+        model_kwargs: {
+          "topP": 1,
           "countPenalty":{
-            "scale":0
+            "scale": 0
           },
           "presencePenalty":{
-            "scale":0
+            "scale": 0
           },
           "frequencyPenalty":{
-            "scale":0
+            "scale": 0
           }
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
+    responseHandler: AWSBedrockJurassic2TextParseResponse,
   },
   ai21_jurrasic2_ultra: {
-    name: 'Jurassic2 Ultra',
+    name: 'Jurassic-2 Ultra',
     distributor: 'AI21 Labs',
     apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
     description:
@@ -276,22 +308,21 @@ export const modelChoices: Models = {
         model: 'ai21.j2-ultra-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
-          "topP":250,
-          "stop_sequences":[],
+        model_kwargs: {
+          "topP": 1,
           "countPenalty":{
-            "scale":0
+            "scale": 0
           },
           "presencePenalty":{
-            "scale":0
+            "scale": 0
           },
           "frequencyPenalty":{
-            "scale":0
+            "scale": 0
           }
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
+      responseHandler: AWSBedrockJurassic2TextParseResponse,
+    },
   amazon_titan_light: {
     name: 'Titan Text Light',
     distributor: 'Amazon',
@@ -314,13 +345,13 @@ export const modelChoices: Models = {
         model: 'amazon.titan-text-lite-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        model_kwargs: {
           "stopSequences": [],
           "topP": 1
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  }, 
+    responseHandler: AWSBedrockTitanTextParseResponse,
+  },
   amazon_titan_express: {
     name: 'Titan Text Express',
     distributor: 'Amazon',
@@ -343,12 +374,12 @@ export const modelChoices: Models = {
         model: 'amazon.titan-text-express-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        model_kwargs: {
           "stopSequences": [],
           "topP": 1
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
+    responseHandler: AWSBedrockTitanTextParseResponse,
   },
   amazon_titan_embed: {
     name: 'Titan Embeddings',
@@ -368,45 +399,11 @@ export const modelChoices: Models = {
     },
     requestBody: (req: IRequestBody) =>
       ({
-        messages: req.messages,
+        embedding_texts: [req.messages.at(-1)?.content],
         model: 'amazon.titan-embed-text-v1',
         max_tokens: 500,
-        temperature: req.temperature,
-        kwargs: {}
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
-  amazon_titan_image_generation: {
-    name: 'Titan Image Generation',
-    distributor: 'Amazon',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/image`,
-    description:
-      'Generate realistic, studio-quality images using text prompts.',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 77,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-    },
-    requestBody: (req: IRequestBody) =>
-      ({
-        prompt: req.messages.at(-1)?.content,
-        model: 'amazon.titan-image-generator-v1',
-        max_tokens: 77,
-        temperature: req.temperature,
-        kwargs: {
-          "numberOfImages": 1,
-          "quality": "standard",
-          "height": 1024,
-          "width": 1024,
-          "cfgScale": 8.0,
-          "seed": 0
-        }
-      } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
+    responseHandler: AWSBedrockTitanEmbedParseResponse,
   },
   anthropic_claude_v1: {
     name: 'Claude 1.3',
@@ -430,7 +427,7 @@ export const modelChoices: Models = {
         model: 'anthropic.claude-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        model_kwargs: {
           "top_k": 250,
           "top_p": 1,
           "stop_sequences": [
@@ -438,8 +435,8 @@ export const modelChoices: Models = {
           ],
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  }, 
+    responseHandler: AWSBedrockClaudeTextParseResponse,
+  },
   anthropic_claude_v2: {
     name: 'Claude 2.0',
     distributor: 'Anthropic',
@@ -462,7 +459,7 @@ export const modelChoices: Models = {
         model: 'anthropic.claude-v2',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        model_kwargs: {
           "top_k": 250,
           "top_p": 1,
           "stop_sequences": [
@@ -470,8 +467,8 @@ export const modelChoices: Models = {
           ],
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
+      responseHandler: AWSBedrockClaudeTextParseResponse,
+    },
   anthropic_claude_v2_1: {
     name: 'Claude 2.1',
     distributor: 'Anthropic',
@@ -494,7 +491,7 @@ export const modelChoices: Models = {
         model: 'anthropic.claude-v2:1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        model_kwargs: {
           "top_k": 250,
           "top_p": 1,
           "stop_sequences": [
@@ -502,8 +499,8 @@ export const modelChoices: Models = {
           ],
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
+      responseHandler: AWSBedrockClaudeTextParseResponse,
+    },
   anthropic_claude_instant_v1: {
     name: 'Claude Instant',
     distributor: 'Anthropic',
@@ -526,7 +523,7 @@ export const modelChoices: Models = {
         model: 'anthropic.claude-instant-v1',
         max_tokens: 500,
         temperature: req.temperature,
-        kwargs: {
+        model_kwargs: {
           "top_k": 250,
           "top_p": 1,
           "stop_sequences": [
@@ -534,8 +531,8 @@ export const modelChoices: Models = {
           ],
         }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  }, 
+      responseHandler: AWSBedrockClaudeTextParseResponse,
+    },
   cohere_command_v14: {
     name: 'Command',
     distributor: 'Cohere',
@@ -556,11 +553,16 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'cohere.command-text-v14',
-        max_tokens: 500,
+        max_tokens: 50,
         temperature: req.temperature,
-        kwargs: {}
+        model_kwargs: {
+          "p": 0.75,
+          "k": 0,
+          "stop_sequences": [],
+          "return_likelihoods": "NONE"
+        }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
+    responseHandler: AWSBedrockCohereTextParseResponse,
   },
   cohere_command_light_v14: {
     name: 'Command Light',
@@ -582,12 +584,17 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'cohere.command-light-text-v14',
-        max_tokens: 500,
+        max_tokens: 50,
         temperature: req.temperature,
-        kwargs: {}
+        model_kwargs: {
+          "p": 0.75,
+          "k": 0,
+          "stop_sequences": [],
+          "return_likelihoods": "NONE"
+        }
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
+      responseHandler: AWSBedrockCohereTextParseResponse,
+    },
   cohere_embed_english_v3: {
     name: 'Embed (English)',
     distributor: 'Cohere',
@@ -606,14 +613,12 @@ export const modelChoices: Models = {
     },
     requestBody: (req: IRequestBody) =>
       ({
-        messages: req.messages,
+        embedding_texts: [req.messages.at(-1)?.content],
         model: 'cohere.embed-english-v3',
-        max_tokens: 500,
-        temperature: req.temperature,
-        kwargs: {}
+        max_tokens: 50,
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
+      responseHandler: AWSBedrockCohereEmbedParseResponse,
+    },
   cohere_embed_multilingual_v3: {
     name: 'Embed (Multilingual)',
     distributor: 'Cohere',
@@ -632,71 +637,11 @@ export const modelChoices: Models = {
     },
     requestBody: (req: IRequestBody) =>
       ({
-        messages: req.messages,
+        embedding_texts: [req.messages.at(-1)?.content],
         model: 'cohere.embed-multilingual-v3',
-        max_tokens: 500,
-        temperature: req.temperature,
-        kwargs: {}
+        max_tokens: 50,
       } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
-  stability_stable_diffusion_xl_v0: {
-    name: 'Stable Diffusion XL 0.8',
-    distributor: 'Stability AI',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/image`,
-    description:
-      'Text-to-image model from Stability AI.',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 77,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-    },
-    requestBody: (req: IRequestBody) =>
-      ({
-        prompt: req.messages.at(-1)?.content,
-        model: 'stability.stable-diffusion-xl-v0',
-        max_tokens: 77,
-        temperature: req.temperature,
-        kwargs: {
-          "cfg_scale":10,
-          "seed":0,
-          "steps":30
-        }
-      } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
-  },
-  stability_stable_diffusion_xl_v1: {
-    name: 'Stable Diffusion XL 1.0',
-    distributor: 'Stability AI',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/image`,
-    description:
-      'The most advanced text-to-image model from Stability AI.',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 77,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-    },
-    requestBody: (req: IRequestBody) =>
-    ({
-      prompt: req.messages.at(-1)?.content,
-      model: 'stability.stable-diffusion-xl-v1',
-      max_tokens: 77,
-      temperature: req.temperature,
-      kwargs: {
-        "cfg_scale":10,
-        "seed":0,
-        "steps":30
-      }
-    } as AWSBedrockRequestBody),
-    responseHandler: OpenAIParseResponse,
+      responseHandler: AWSBedrockCohereEmbedParseResponse,
   },
 };
 

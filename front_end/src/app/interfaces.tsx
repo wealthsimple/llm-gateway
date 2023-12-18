@@ -68,9 +68,9 @@ export interface AWSBedrockRequestBody {
   model: string;
   temperature: number;
   max_tokens: number;
-  prompt?: string;
-  messages?: Message[];
+  prompt: string;
   embedding_texts?: string[];
+  instructions?: string;
   kwargs?: ModelConfig;
 }
 
