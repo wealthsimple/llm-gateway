@@ -47,8 +47,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str]
     COHERE_API_KEY: Optional[str]
 
-    # AWS Client / Boto3 Config
+    # AWS Client Keys
     AWS_REGION: Optional[str]
+    AWS_PUBLIC_ACCESS_KEY: Optional[str]
+    AWS_PRIVATE_ACCESS_KEY: Optional[str]
 
     # Postgres Database
     DATABASE_URL: str

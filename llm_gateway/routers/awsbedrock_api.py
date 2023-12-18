@@ -16,7 +16,6 @@
 # limitations under the License.
 
 from fastapi import APIRouter, BackgroundTasks
-from fastapi.responses import StreamingResponse
 from starlette.responses import JSONResponse
 
 from llm_gateway.exceptions import AWSBedrockRouteExceptionHandler
@@ -32,7 +31,14 @@ router = APIRouter(route_class=AWSBedrockRouteExceptionHandler)
 def get_completion_text(
     user_input: AWSBedrockTextInput, background_tasks: BackgroundTasks
 ) -> JSONResponse:
-    """"""
+    """
+    Use the AWS Bedrock API to generate a response to a prompt
+
+    :param user_input: Inputs to the AWS Bedrock API, including prompt
+    :type user_input: AWSBedrockTextInput
+    :return: Dictionary with LLM response and metadata
+    :rtype: JSONResponse
+    """
     wrapper = AWSBedrockWrapper()
     resp, logs = wrapper.send_awsbedrock_request(
         awsbedrock_module="Text",
@@ -52,7 +58,14 @@ def get_completion_text(
 def get_completion_embedding(
     user_input: AWSBedrockEmbedInput, background_tasks: BackgroundTasks
 ) -> JSONResponse:
-    """"""
+    """
+    Use the AWS Bedrock API to generate a embedding vectors from a prompt
+
+    :param user_input: Inputs to the AWS Bedrock API, including prompt
+    :type user_input: AWSBedrockEmbedInput
+    :return: Dictionary with LLM response and metadata
+    :rtype: JSONResponse
+    """
     wrapper = AWSBedrockWrapper()
     resp, logs = wrapper.send_awsbedrock_request(
         awsbedrock_module="Embed",

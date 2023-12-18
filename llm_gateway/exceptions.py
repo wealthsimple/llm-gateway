@@ -15,6 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from botocore.exceptions import (
+    BotoCoreError,
+    ClientError,
+    ConnectionError,
+    InvalidRegionError,
+    NoCredentialsError,
+    NoRegionError,
+)
 from cohere.error import CohereAPIError, CohereConnectionError, CohereError
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -39,7 +47,14 @@ OPENAI_EXCEPTIONS = (
     AuthenticationError,
 )
 COHERE_EXCEPTIONS = (CohereError, CohereAPIError, CohereConnectionError)
-AWSBEDROCK_EXCEPTIONS = ()
+AWSBEDROCK_EXCEPTIONS = (
+    BotoCoreError,
+    ClientError,
+    ConnectionError,
+    NoCredentialsError,
+    NoRegionError,
+    InvalidRegionError,
+)
 
 logger = get_logger(__name__)
 

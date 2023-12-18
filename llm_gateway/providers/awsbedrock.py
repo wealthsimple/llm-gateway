@@ -34,23 +34,23 @@ settings = get_settings()
 
 SUPPORTED_AWSBEDROCK_ENDPOINTS = {
     "Text": [
-        "meta.llama2-13b-chat-v1",  # ok
-        "meta.llama2-70b-chat-v1",  # ok
-        "ai21.j2-mid-v1",  # ok
-        "ai21.j2-ultra-v1",  # ok
-        "amazon.titan-text-lite-v1",  # ok
-        "amazon.titan-text-express-v1",  # ok
-        "anthropic.claude-v1",  # ok
-        "anthropic.claude-v2",  # ok
-        "anthropic.claude-v2:1",  # ok
-        "anthropic.claude-instant-v1",  # ok
-        "cohere.command-text-v14",  # ok
-        "cohere.command-light-text-v14",  # ok
+        "meta.llama2-13b-chat-v1",
+        "meta.llama2-70b-chat-v1",
+        "ai21.j2-mid-v1",
+        "ai21.j2-ultra-v1",
+        "amazon.titan-text-lite-v1",
+        "amazon.titan-text-express-v1",
+        "anthropic.claude-v1",
+        "anthropic.claude-v2",
+        "anthropic.claude-v2:1",
+        "anthropic.claude-instant-v1",
+        "cohere.command-text-v14",
+        "cohere.command-light-text-v14",
     ],
     "Embed": [
-        "amazon.titan-embed-text-v1",  # ok
-        "cohere.embed-english-v3",  # ok
-        "cohere.embed-multilingual-v3",  # ok
+        "amazon.titan-embed-text-v1",
+        "cohere.embed-english-v3",
+        "cohere.embed-multilingual-v3",
     ],
 }
 
@@ -64,17 +64,19 @@ class AWSBedrockWrapper:
 
     def __init__(self) -> None:
         self._bedrock_runtime = boto3.client(
-            service_name="bedrock-runtime",
+            aws_access_key_id=settings.AWS_PUBLIC_ACCESS_KEY,
+            aws_secret_access_key=settings.AWS_PRIVATE_ACCESS_KEY,
             region_name=settings.AWS_REGION,
+            service_name="bedrock-runtime",
         )
 
     def _validate_awsbedrock_endpoint(self, endpoint: str, model: str) -> None:
         """
         Check if endpoint and model are supported in AWS Bedrock, else raise an error
 
-        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "Chat")
+        :param endpoint: The name of an AWS Bedrock endpoint (i.e. "Text")
         :type endpoint: str
-        :param model: The name of an AWS Bedrock model (i.e. "meta.llama2-70b-chat-v1")
+        :param model: The name of an AWS Bedrock model (i.e. "anthropic.claude-v2:1")
         :type model: str
         :raises NotImplementedError: Raised if AWS Bedrock module, endpoint, or model is not supported
         """
@@ -101,7 +103,7 @@ class AWSBedrockWrapper:
         """
         Structure the body of the AWS Bedrock API request (Model specific)
 
-        :param model: The name of an AWS Bedrock model (i.e. "meta.llama2-70b-chat-v1")
+        :param model: The name of an AWS Bedrock model (i.e. "anthropic.claude-v2:1")
         :type model: str
         :param max_tokens: The maximum number of tokens to generate
         :type max_tokens: int
@@ -152,7 +154,7 @@ class AWSBedrockWrapper:
             case "anthropic.claude-v1" | "anthropic.claude-v2" | "anthropic.claude-v2:1" | "anthropic.claude-instant-v1":
                 return (
                     {
-                        "prompt": f"\n\nHuman: {prompt}\n\nAssistant: {instruction}",
+                        "prompt": f"\n\nHuman: {prompt} \n\nAssistant:",
                         "max_tokens_to_sample": max_tokens,
                         "temperature": temperature,
                         **kwargs,
@@ -191,7 +193,16 @@ class AWSBedrockWrapper:
         model: str,
         body: dict,
     ) -> JSONResponse:
-        """ """
+        """
+        Call the invoke model enpoint from the AWS Bedrock client and return response
+
+        :param model: The name of an AWS Bedrock model (i.e. "anthropic.claude-v2:1")
+        :type model: str
+        :param body: Body of the model-specific request to the AWS Bedrock API
+        :type body: dict
+        :return: Response from the AWS Bedrock API
+        :rtype: JSONResponse
+        """
 
         res = self._bedrock_runtime.invoke_model(
             modelId=model,
@@ -205,7 +216,7 @@ class AWSBedrockWrapper:
     def send_awsbedrock_request(
         self,
         awsbedrock_module: str,
-        model: Optional[str] = None,
+        model: str,
         max_tokens: Optional[int] = None,
         prompt: Optional[str] = None,
         temperature: Optional[float] = 0,
@@ -216,10 +227,10 @@ class AWSBedrockWrapper:
         """
         Send a request to the AWS Bedrock API and return response and logs for db write
 
-        :param openai_module: Valid AWS Bedrock module to hit (i.e. "Chat")
-        :type openai_module: str
-        :param model: Model to hit, defaults to None
-        :type model: Optional[str]
+        :param awsbedrock_module: Valid AWS Bedrock module to hit (i.e. "Text")
+        :type awsbedrock_module: str
+        :param model: Model to hit
+        :type model: str
         :param max_tokens: Maximum tokens for prompt and completion, defaults to None
         :type max_tokens: Optional[int]
         :param prompt: _description_, defaults to None
@@ -230,9 +241,9 @@ class AWSBedrockWrapper:
         :type instruction: Optional[str]
         :param embedding_texts: List of prompts, if calling embedding, defaults to None
         :type embedding_texts: Optional[list]
-        :param kwargs: other parameters to pass to openai api. (ie- functions, function_call, etc.)
+        :param kwargs: other model-specific parameters to pass to AWS Bedrock. (ie- topP, stop_sequences, seed, etc.)
         :type kwargs: Optional[dict]
-        :return: Flattened response from OpenAI
+        :return: Flattened response from AWS Bedrock API and logs for db write
         :rtype: _type_
         """
         self._validate_awsbedrock_endpoint(endpoint=awsbedrock_module, model=model)
@@ -270,7 +281,6 @@ class AWSBedrockWrapper:
         return awsbedrock_response, db_record
 
     def write_logs_to_db(self, db_logs: dict):
-        """ """
         if isinstance(db_logs["awsbedrock_response"], list):
             db_logs["awsbedrock_response"] = "".join(db_logs["awsbedrock_response"])
         write_record_to_db(AWSBedrockRequests(**db_logs))

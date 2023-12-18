@@ -35,7 +35,6 @@ Use `llm-gateway` to interact with OpenAI in a safe manner. The gateway also rec
 | Meta          | Llama-2-13b-chat          |
 | Meta          | Llama-2-70b-chat          |
 
-
 ## ⚒️ Usage
 
 The provider's API key needs to be saved as an environment variable (see setup further down). If you are communicating with OpenAI, set `OPENAI_API_KEY`.
