@@ -211,7 +211,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'meta.llama2-13b-chat-v1',
-        max_tokens: 500, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, model_kwargs)
+        max_tokens: 4000, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, model_kwargs)
         temperature: req.temperature,
         instructions: DEFAULT_INITIAL_PROMPT[0].content,
         model_kwargs: {
@@ -240,7 +240,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'meta.llama2-70b-chat-v1',
-        max_tokens: 500,
+        max_tokens: 4000,
         temperature: req.temperature,
         instruction: DEFAULT_INITIAL_PROMPT[0].content,
         model_kwargs: {
@@ -269,7 +269,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'ai21.j2-mid-v1',
-        max_tokens: 500,
+        max_tokens: 8192,
         temperature: req.temperature,
         model_kwargs: {
           "topP": 1,
@@ -306,7 +306,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'ai21.j2-ultra-v1',
-        max_tokens: 500,
+        max_tokens: 8192,
         temperature: req.temperature,
         model_kwargs: {
           "topP": 1,
@@ -343,7 +343,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'amazon.titan-text-lite-v1',
-        max_tokens: 500,
+        max_tokens: 4000,
         temperature: req.temperature,
         model_kwargs: {
           "stopSequences": [],
@@ -372,7 +372,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'amazon.titan-text-express-v1',
-        max_tokens: 500,
+        max_tokens: 8000,
         temperature: req.temperature,
         model_kwargs: {
           "stopSequences": [],
@@ -401,7 +401,7 @@ export const modelChoices: Models = {
       ({
         embedding_texts: [req.messages.at(-1)?.content],
         model: 'amazon.titan-embed-text-v1',
-        max_tokens: 500,
+        max_tokens: 8000,
       } as AWSBedrockRequestBody),
     responseHandler: AWSBedrockTitanEmbedParseResponse,
   },
@@ -425,7 +425,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'anthropic.claude-v1',
-        max_tokens: 500,
+        max_tokens: 100000,
         temperature: req.temperature,
         model_kwargs: {
           "top_k": 250,
@@ -457,7 +457,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'anthropic.claude-v2',
-        max_tokens: 500,
+        max_tokens: 100000,
         temperature: req.temperature,
         model_kwargs: {
           "top_k": 250,
@@ -489,7 +489,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'anthropic.claude-v2:1',
-        max_tokens: 500,
+        max_tokens: 200000,
         temperature: req.temperature,
         model_kwargs: {
           "top_k": 250,
@@ -521,7 +521,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'anthropic.claude-instant-v1',
-        max_tokens: 500,
+        max_tokens: 100000,
         temperature: req.temperature,
         model_kwargs: {
           "top_k": 250,
@@ -553,7 +553,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'cohere.command-text-v14',
-        max_tokens: 50,
+        max_tokens: 4000,
         temperature: req.temperature,
         model_kwargs: {
           "p": 0.75,
@@ -584,7 +584,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'cohere.command-light-text-v14',
-        max_tokens: 50,
+        max_tokens: 4000,
         temperature: req.temperature,
         model_kwargs: {
           "p": 0.75,
@@ -615,7 +615,7 @@ export const modelChoices: Models = {
       ({
         embedding_texts: [req.messages.at(-1)?.content],
         model: 'cohere.embed-english-v3',
-        max_tokens: 50,
+        max_tokens: 1024,
       } as AWSBedrockRequestBody),
       responseHandler: AWSBedrockCohereEmbedParseResponse,
     },
@@ -639,7 +639,7 @@ export const modelChoices: Models = {
       ({
         embedding_texts: [req.messages.at(-1)?.content],
         model: 'cohere.embed-multilingual-v3',
-        max_tokens: 50,
+        max_tokens: 1024,
       } as AWSBedrockRequestBody),
       responseHandler: AWSBedrockCohereEmbedParseResponse,
   },
