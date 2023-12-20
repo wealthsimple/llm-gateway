@@ -12,9 +12,34 @@ Per OpenAI's non-API consumer products [data usage policy](https://help.openai.c
 
 Use `llm-gateway` to interact with OpenAI in a safe manner. The gateway also recreates the ChatGPT frontend using OpenAI's `/ChatCompletion` endpoint to keep all communication within the API.
 
+## 📦 Supported Models
+
+| Provider      | Model                     |
+|:--------------:|:-------------------------:|
+| OpenAI        | GPT 3.5 Turbo             |
+| OpenAI        | GPT 3.5 Turbo 16k         |
+| OpenAI        | GPT 4                     |
+| AI21 Labs     | Jurassic-2 Ultra          |
+| AI21 Labs     | Jurassic-2 Mid            |
+| Amazon        | Titan Text Lite           |
+| Amazon        | Titan Text Express        |
+| Amazon        | Titan Text Embeddings     |
+| Anthropic     | Claude 2.1                |
+| Anthropic     | Claude 2.0                |
+| Anthropic     | Claude 1.3                |
+| Anthropic     | Claude Instant            |
+| Cohere        | Command                   |
+| Cohere        | Command Light             |
+| Cohere        | Embed - English           |
+| Cohere        | Embed - Multilingual      |
+| Meta          | Llama-2-13b-chat          |
+| Meta          | Llama-2-70b-chat          |
+
 ## ⚒️ Usage
 
 The provider's API key needs to be saved as an environment variable (see setup further down). If you are communicating with OpenAI, set `OPENAI_API_KEY`.
+
+For step-by-step setup instructions with Cohere, OpenAI, and AWS Bedrock, click [here](llm_gateway/README.md).
 
 ### API Usage
 [OpenAI] Example cURL to `/completion` endpoint:

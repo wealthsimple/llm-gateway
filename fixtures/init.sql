@@ -21,3 +21,15 @@ CREATE TABLE cohere_requests(
     created_at TIMESTAMP WITHOUT TIME ZONE,
     cohere_endpoint VARCHAR
 );
+
+CREATE TABLE awsbedrock_requests(
+    id serial primary key,
+    user_input VARCHAR,
+    user_email VARCHAR,
+    awsbedrock_response JSON,
+    awsbedrock_model VARCHAR,
+    temperature FLOAT,
+    created_at TIMESTAMP WITHOUT TIME ZONE,
+    awsbedrock_endpoint VARCHAR
+    extras JSON
+);

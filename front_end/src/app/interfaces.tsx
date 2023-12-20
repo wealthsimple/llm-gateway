@@ -46,7 +46,8 @@ export interface ModelInfo {
   advanceMetadata: ModelMetadata;
   supportFileUpload: boolean;
   initialPrompt: Message[];
-  requestBody: (req: IRequestBody) => OpenAIRequestBody | CohereRequestBody;
+  requirements: string,
+  requestBody: (req: IRequestBody) => OpenAIRequestBody | CohereRequestBody | AWSBedrockRequestBody;
   responseHandler: (res: any) => string;
 }
 
@@ -63,8 +64,22 @@ export interface CohereRequestBody {
   model: string;
 }
 
+export interface AWSBedrockRequestBody {
+  model: string;
+  temperature: number;
+  max_tokens: number;
+  prompt?: string;
+  embedding_texts?: string[];
+  instructions?: string;
+  model_kwargs?: ModelConfig;
+}
+
 interface ModelMetadata {
   [key: string]: string;
+}
+
+interface ModelConfig {
+  [key: string]: any;
 }
 
 export interface Models {

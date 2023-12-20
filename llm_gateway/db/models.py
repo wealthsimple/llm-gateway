@@ -29,9 +29,9 @@ class OpenAIRequests(Base):
     openai_response = Column(JSON, nullable=True)
     openai_model = Column(String, nullable=True)
     temperature = Column(Float, nullable=True)
-    extras = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False)
     openai_endpoint = Column(String, nullable=False)
+    extras = Column(JSON, nullable=True)
 
 
 class CohereRequests(Base):
@@ -44,4 +44,16 @@ class CohereRequests(Base):
     temperature = Column(Float, nullable=True)
     created_at = Column(DateTime, nullable=False)
     cohere_endpoint = Column(String, nullable=False)
+    extras = Column(JSON, nullable=True)
+
+class AWSBedrockRequests(Base):
+    __tablename__ = "awsbedrock_requests"
+    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+    user_input = Column(String, nullable=True)
+    user_email = Column(String, nullable=True)
+    awsbedrock_response = Column(JSON, nullable=True)
+    awsbedrock_model = Column(String, nullable=True)
+    temperature = Column(Float, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    awsbedrock_endpoint = Column(String, nullable=False)
     extras = Column(JSON, nullable=True)
