@@ -67,22 +67,12 @@ const AWSBedrockTitanTextParseResponse = (response: any) => {
   return response.results[0].outputText;
 }
 
-const AWSBedrockTitanEmbedParseResponse = (response: any) => {
-  // return response with new line character between each vector point
-  return (response.embedding as string[]).map((value: string) => value + "\n").join('');
-}
-
 const AWSBedrockClaudeTextParseResponse = (response: any) => {
   return response.completion;
 }
 
 const AWSBedrockCohereTextParseResponse = (response: any) => {
   return response.generations[0].text;
-}
-
-const AWSBedrockCohereEmbedParseResponse = (response: any) => {
-  // return response with new line character between each vector point
-  return (response.embeddings[0] as string[]).map((value: string) => value + "\n").join('');
 }
 
 
@@ -198,7 +188,7 @@ export const modelChoices: Models = {
     description:
       'Fine-tuned model in the parameter size of 13B. Suitable for smaller-scale tasks such as text classification, sentiment analysis, and language translation.',
     initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 4000,
+    maxTokensLimit: 4096,
     isSecureModel: false,
     supportFileUpload: false,
     requirements: "AWS Account + Bedrock Enabled",
@@ -211,7 +201,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'meta.llama2-13b-chat-v1',
-        max_tokens: 4000, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, model_kwargs)
+        max_tokens: 500, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, model_kwargs)
         temperature: req.temperature,
         instructions: DEFAULT_INITIAL_PROMPT[0].content,
         model_kwargs: {
@@ -227,7 +217,7 @@ export const modelChoices: Models = {
     description:
       'Fine-tuned model in the parameter size of 70B. Suitable for larger-scale tasks such as language modeling, text generation, and dialogue systems.',
     initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 4000,
+    maxTokensLimit: 4096,
     isSecureModel: false,
     supportFileUpload: false,
     requirements: "AWS Account + Bedrock Enabled",
@@ -240,7 +230,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'meta.llama2-70b-chat-v1',
-        max_tokens: 4000,
+        max_tokens: 500,
         temperature: req.temperature,
         instruction: DEFAULT_INITIAL_PROMPT[0].content,
         model_kwargs: {
@@ -269,7 +259,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'ai21.j2-mid-v1',
-        max_tokens: 8192,
+        max_tokens: 4096,
         temperature: req.temperature,
         model_kwargs: {
           "topP": 1,
@@ -306,7 +296,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'ai21.j2-ultra-v1',
-        max_tokens: 8192,
+        max_tokens: 4096,
         temperature: req.temperature,
         model_kwargs: {
           "topP": 1,
@@ -343,7 +333,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'amazon.titan-text-lite-v1',
-        max_tokens: 4000,
+        max_tokens: 2000,
         temperature: req.temperature,
         model_kwargs: {
           "stopSequences": [],
@@ -372,7 +362,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'amazon.titan-text-express-v1',
-        max_tokens: 8000,
+        max_tokens: 4000,
         temperature: req.temperature,
         model_kwargs: {
           "stopSequences": [],
@@ -380,30 +370,6 @@ export const modelChoices: Models = {
         }
       } as AWSBedrockRequestBody),
     responseHandler: AWSBedrockTitanTextParseResponse,
-  },
-  amazon_titan_embed: {
-    name: 'Titan Embeddings',
-    distributor: 'Amazon',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/embed`,
-    description:
-      'LLM that translates text into numerical representations.',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 8000,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-      'Embeddings': '1536',
-    },
-    requestBody: (req: IRequestBody) =>
-      ({
-        embedding_texts: [req.messages.at(-1)?.content],
-        model: 'amazon.titan-embed-text-v1',
-        max_tokens: 8000,
-      } as AWSBedrockRequestBody),
-    responseHandler: AWSBedrockTitanEmbedParseResponse,
   },
   anthropic_claude_v1: {
     name: 'Claude 1.3',
@@ -425,7 +391,7 @@ export const modelChoices: Models = {
       ({
         prompt: req.messages.at(-1)?.content,
         model: 'anthropic.claude-v1',
-        max_tokens: 100000,
+        max_tokens: 500,
         temperature: req.temperature,
         model_kwargs: {
           "top_k": 250,
@@ -563,85 +529,6 @@ export const modelChoices: Models = {
         }
       } as AWSBedrockRequestBody),
     responseHandler: AWSBedrockCohereTextParseResponse,
-  },
-  cohere_command_light_v14: {
-    name: 'Command Light',
-    distributor: 'Cohere',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
-    description:
-      'Command Light is a smaller version of Command, Cohere\'s generative LLM (6B parameters).',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 4000,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-      'Context window': '4k',
-    },
-    requestBody: (req: IRequestBody) =>
-      ({
-        prompt: req.messages.at(-1)?.content,
-        model: 'cohere.command-light-text-v14',
-        max_tokens: 4000,
-        temperature: req.temperature,
-        model_kwargs: {
-          "p": 0.75,
-          "k": 0,
-          "stop_sequences": [],
-          "return_likelihoods": "NONE"
-        }
-      } as AWSBedrockRequestBody),
-      responseHandler: AWSBedrockCohereTextParseResponse,
-    },
-  cohere_embed_english_v3: {
-    name: 'Embed (English)',
-    distributor: 'Cohere',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/embed`,
-    description:
-      'Embed is Cohere\'s text representation, or embeddings, model. This version supports English only.',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 1024,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-      'Context window': '4k',
-    },
-    requestBody: (req: IRequestBody) =>
-      ({
-        embedding_texts: [req.messages.at(-1)?.content],
-        model: 'cohere.embed-english-v3',
-        max_tokens: 1024,
-      } as AWSBedrockRequestBody),
-      responseHandler: AWSBedrockCohereEmbedParseResponse,
-    },
-  cohere_embed_multilingual_v3: {
-    name: 'Embed (Multilingual)',
-    distributor: 'Cohere',
-    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/embed`,
-    description:
-      'Embed is Cohere\'s text representation, or embeddings, model. This version supports multiple languages.',
-    initialPrompt: DEFAULT_INITIAL_PROMPT,
-    maxTokensLimit: 1024,
-    isSecureModel: false,
-    supportFileUpload: false,
-    requirements: "AWS Account + Bedrock Enabled",
-    advanceMetadata: {
-      'Hosted on': 'Amazon Web Services (Bedrock)',
-      'Inference Hardware': 'GPU',
-      'Context window': '4k',
-    },
-    requestBody: (req: IRequestBody) =>
-      ({
-        embedding_texts: [req.messages.at(-1)?.content],
-        model: 'cohere.embed-multilingual-v3',
-        max_tokens: 1024,
-      } as AWSBedrockRequestBody),
-      responseHandler: AWSBedrockCohereEmbedParseResponse,
   },
 };
 

@@ -32,25 +32,43 @@ from llm_gateway.utils import max_retries
 settings = get_settings()
 
 
+META_LLAMA2_13B_CHAT_V1 = "meta.llama2-13b-chat-v1"
+META_LLAMA2_70B_CHAT_V1 = "meta.llama2-70b-chat-v1"
+AI21_J2_MID_V1 = "ai21.j2-mid-v1"
+AI21_J2_ULTRA_V1 = "ai21.j2-ultra-v1"
+AMAZON_TITAN_TEXT_LITE_V1 = "amazon.titan-text-lite-v1"
+AMAZON_TITAN_TEXT_EXPRESS_V1 = "amazon.titan-text-express-v1"
+ANTHROPIC_CLAUDE_V1 = "anthropic.claude-v1"
+ANTHROPIC_CLAUDE_V2 = "anthropic.claude-v2"
+ANTHROPIC_CLAUDE_V2_1 = "anthropic.claude-v2:1"
+ANTHROPIC_CLAUDE_INSTANT_V1 = "anthropic.claude-instant-v1"
+COHERE_COMMAND_TEXT_V14 = "cohere.command-text-v14"
+COHERE_COMMAND_LIGHT_TEXT_V14 = "cohere.command-light-text-v14"
+AMAZON_TITAN_EMBED_TEXT_V1 = "amazon.titan-embed-text-v1"
+COHERE_EMBED_ENGLISH_V3 = "cohere.embed-english-v3"
+COHERE_EMBED_MULTILINGUAL_V3 = "cohere.embed-multilingual-v3"
+
+
 SUPPORTED_AWSBEDROCK_ENDPOINTS = {
     "Text": [
-        "meta.llama2-13b-chat-v1",
-        "meta.llama2-70b-chat-v1",
-        "ai21.j2-mid-v1",
-        "ai21.j2-ultra-v1",
-        "amazon.titan-text-lite-v1",
-        "amazon.titan-text-express-v1",
-        "anthropic.claude-v1",
-        "anthropic.claude-v2",
-        "anthropic.claude-v2:1",
-        "anthropic.claude-instant-v1",
-        "cohere.command-text-v14",
-        "cohere.command-light-text-v14",
+        META_LLAMA2_13B_CHAT_V1,
+        META_LLAMA2_70B_CHAT_V1,
+        AI21_J2_MID_V1,
+        AI21_J2_ULTRA_V1,
+        AMAZON_TITAN_TEXT_LITE_V1,
+        AMAZON_TITAN_TEXT_EXPRESS_V1,
+        ANTHROPIC_CLAUDE_V1,
+        ANTHROPIC_CLAUDE_V2,
+        ANTHROPIC_CLAUDE_V2_1,
+        ANTHROPIC_CLAUDE_INSTANT_V1,
+        COHERE_COMMAND_TEXT_V14,
+        COHERE_COMMAND_LIGHT_TEXT_V14,
     ],
+    # Embedding endpoints are only supportred in the backend API
     "Embed": [
-        "amazon.titan-embed-text-v1",
-        "cohere.embed-english-v3",
-        "cohere.embed-multilingual-v3",
+        AMAZON_TITAN_EMBED_TEXT_V1,
+        COHERE_EMBED_ENGLISH_V3,
+        COHERE_EMBED_MULTILINGUAL_V3,
     ],
 }
 
@@ -121,71 +139,80 @@ class AWSBedrockWrapper:
         :rtype: Tuple[dict, str]
         """
 
-        match model:
-            case "ai21.j2-mid-v1" | "ai21.j2-ultra-v1":
-                return (
-                    {
-                        "prompt": prompt,
-                        "maxTokens": max_tokens,
+        if model in (AI21_J2_MID_V1, AI21_J2_ULTRA_V1):
+            return (
+                {
+                    "prompt": prompt,
+                    "maxTokens": max_tokens,
+                    "temperature": temperature,
+                    **kwargs,
+                },
+                prompt,
+            )
+        if model in (AMAZON_TITAN_TEXT_LITE_V1, AMAZON_TITAN_TEXT_EXPRESS_V1):
+            return (
+                {
+                    "inputText": prompt,
+                    "textGenerationConfig": {
+                        "maxTokenCount": max_tokens,
                         "temperature": temperature,
                         **kwargs,
                     },
-                    prompt,
-                )
-            case "amazon.titan-text-lite-v1" | "amazon.titan-text-express-v1":
-                return (
-                    {
-                        "inputText": prompt,
-                        "textGenerationConfig": {
-                            "maxTokenCount": max_tokens,
-                            "temperature": temperature,
-                            **kwargs,
-                        },
-                    },
-                    prompt,
-                )
-            case "amazon.titan-embed-text-v1":
-                return (
-                    {
-                        "inputText": f"{embedding_texts}",
-                    },
-                    f"{embedding_texts}",
-                )
-            case "anthropic.claude-v1" | "anthropic.claude-v2" | "anthropic.claude-v2:1" | "anthropic.claude-instant-v1":
-                return (
-                    {
-                        "prompt": f"\n\nHuman: {prompt} \n\nAssistant:",
-                        "max_tokens_to_sample": max_tokens,
-                        "temperature": temperature,
-                        **kwargs,
-                    },
-                    prompt,
-                )
-            case "cohere.command-text-v14" | "cohere.command-light-text-v14":
-                return (
-                    {
-                        "prompt": prompt,
-                        "max_tokens": max_tokens,
-                        "temperature": temperature,
-                        **kwargs,
-                    },
-                    prompt,
-                )
-            case "cohere.embed-english-v3" | "cohere.embed-multilingual-v3":
-                return (
-                    {"texts": embedding_texts, "input_type": "search_document"},
-                    f"{embedding_texts}",
-                )
-            case "meta.llama2-13b-chat-v1" | "meta.llama2-70b-chat-v1":
-                return (
-                    {
-                        "prompt": f"[INST]{instruction}[/INST]\n {prompt}",
-                        "max_gen_len": max_tokens,
-                        "temperature": temperature,
-                        **kwargs,
-                    },
-                    f"[INST]{instruction}[/INST]\n {prompt}",
-                )
+                },
+                prompt,
+            )
+        if model in (AMAZON_TITAN_EMBED_TEXT_V1,):
+            return (
+                {
+                    "inputText": f"{embedding_texts}",
+                },
+                f"{embedding_texts}",
+            )
+        if model in (
+            ANTHROPIC_CLAUDE_V1,
+            ANTHROPIC_CLAUDE_V2,
+            ANTHROPIC_CLAUDE_V2_1,
+            ANTHROPIC_CLAUDE_INSTANT_V1,
+        ):
+            return (
+                {
+                    "prompt": f"\n\nHuman: {prompt} \n\nAssistant:",
+                    "max_tokens_to_sample": max_tokens,
+                    "temperature": temperature,
+                    **kwargs,
+                },
+                prompt,
+            )
+        if model in (COHERE_COMMAND_TEXT_V14, COHERE_COMMAND_LIGHT_TEXT_V14):
+            return (
+                {
+                    "prompt": prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    **kwargs,
+                },
+                prompt,
+            )
+        if model in (COHERE_EMBED_ENGLISH_V3, COHERE_EMBED_MULTILINGUAL_V3):
+            return (
+                {"texts": embedding_texts, "input_type": "search_document"},
+                f"{embedding_texts}",
+            )
+        if model in (META_LLAMA2_13B_CHAT_V1, META_LLAMA2_70B_CHAT_V1):
+            return (
+                {
+                    "prompt": prompt,
+                    "max_gen_len": max_tokens,
+                    "temperature": temperature,
+                    **kwargs,
+                },
+                f"[INST]{instruction}[/INST]\n {prompt}",
+            )
+
+        # If no model is matched, raise NotImplementedError
+        raise NotImplementedError(
+            f"{model}` is not supported by the AWS Bedrock API. Please choose one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS}"
+        )
 
     @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
     def _invoke_awsbedrock_model(
