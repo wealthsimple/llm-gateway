@@ -53,18 +53,19 @@ export const ChatNavBarComponent = (props: ChatNavBarProps): JSX.Element => {
             <button className="primary-btn">New Chat</button>
           </body>
         </article>
-
-        {props.conversationsState.conversations.map((conversation) => (
-          // eslint-disable-next-line react/jsx-key
-          <ChatNavItem
-            conversation={conversation}
-            selectedId={props.selectedId}
-            setSelectedId={props.setSelectedId}
-            isModelLoadingReply={props.isModelLoadingReply}
-            setShowConfirmDeleteDialog={setShowConfirmDeleteDialog}
-            updateChatTitle={props.updateChatTitle}
-          />
-        ))}
+        <div className="multichat-nav-bar-scroll">
+          {props.conversationsState.conversations.map((conversation) => (
+            // eslint-disable-next-line react/jsx-key
+            <ChatNavItem
+              conversation={conversation}
+              selectedId={props.selectedId}
+              setSelectedId={props.setSelectedId}
+              isModelLoadingReply={props.isModelLoadingReply}
+              setShowConfirmDeleteDialog={setShowConfirmDeleteDialog}
+              updateChatTitle={props.updateChatTitle}
+            />
+          ))}
+        </div>
       </div>
       <ClearChatDialog
         selectedId={props.selectedId}

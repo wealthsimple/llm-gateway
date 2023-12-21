@@ -78,6 +78,7 @@
   border-color: var(--outline);
   border-radius: 12px;
   border-width: 1.5px;
+  height: 70vh;
 }
 
 .chat-container .main-chat-container {
@@ -101,6 +102,10 @@
   flex-direction: column;
   padding: 0;
   margin: 0;
+  height: 100%;
+}
+
+.multichat-nav-bar-scroll {
   overflow-y: auto;
 }
 
@@ -269,6 +274,7 @@
 .message-history ul {
   margin: 0px;
   padding: 0;
+  contain: size;
 }
 
 .message-history .message {

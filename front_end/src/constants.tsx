@@ -51,7 +51,7 @@ const OpenAIParseResponse = (response: any) => {
 };
 
 const CohereParseResponse = (response: any) => {
-  return response.data;
+  return response.data[0];
 };
 
 const DEFAULT_INITIAL_PROMPT = [
