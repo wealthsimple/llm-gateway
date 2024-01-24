@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from llm_gateway.constants import get_settings
-from llm_gateway.routers import cohere_api, openai_api
+from llm_gateway.routers import awsbedrock_api, cohere_api, openai_api
 
 settings = get_settings()
 
@@ -28,11 +28,12 @@ app.title = settings.APP_TITLE
 app.description = settings.APP_DESCRIPTION
 
 
-api = FastAPI(openapi_prefix="/api")
+api = FastAPI(root_path="/api")
 api.title = settings.APP_TITLE
 api.description = settings.APP_DESCRIPTION
 api.include_router(openai_api.router, prefix="/openai")
 api.include_router(cohere_api.router, prefix="/cohere")
+api.include_router(awsbedrock_api.router, prefix="/awsbedrock")
 
 app.mount(settings.API_PREFIX, api, name="api")
 
