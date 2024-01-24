@@ -35,10 +35,9 @@ export const ModelSettingsDialog: React.FC<Props> = ({
   const [newTitle, setNewTitle] = useState('');
 
   const createConversation = () => {
-    const title = newTitle.trim();
+    let title = newTitle.trim();
     if (!title) {
-      alert("Chat title can't be empty!");
-      return;
+      title = "Untitled Chat";
     }
     createNewConversation(title, selectedOption);
     closeModal();
