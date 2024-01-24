@@ -105,7 +105,7 @@ class AWSBedrockWrapper:
 
         if model not in SUPPORTED_AWSBEDROCK_ENDPOINTS[endpoint]:
             raise NotImplementedError(
-                f"`model` must be one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS[endpoint]} for endpoint `{endpoint}`"
+                f"`model` must be one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS[endpoint]} for endpoint `{endpoint}`"  # noqa
             )
 
     def _structure_model_body(
@@ -133,7 +133,8 @@ class AWSBedrockWrapper:
         :type instruction: Optional[str]
         :param temperature: The temperature of the model, defaults to 0
         :type temperature: Optional[float]
-        :param kwargs: other model-specific parameters to pass to AWS Bedrock. (ie- topP, stop_sequences, seed, etc.)
+        :param kwargs: other model-specific parameters to pass to AWS Bedrock.
+            (ie- topP, stop_sequences, seed, etc.)
         :type kwargs: Optional[dict]
         :return: Body of the model-specific request to the AWS Bedrock API and the strigified user input
         :rtype: Tuple[dict, str]
@@ -211,7 +212,7 @@ class AWSBedrockWrapper:
 
         # If no model is matched, raise NotImplementedError
         raise NotImplementedError(
-            f"{model}` is not supported by the AWS Bedrock API. Please choose one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS}"
+            f"{model}` is not supported by the AWS Bedrock API. Please choose one of `{SUPPORTED_AWSBEDROCK_ENDPOINTS}"  # noqa
         )
 
     @max_retries(3, exceptions=AWSBEDROCK_EXCEPTIONS)
@@ -268,7 +269,8 @@ class AWSBedrockWrapper:
         :type instruction: Optional[str]
         :param embedding_texts: List of prompts, if calling embedding, defaults to None
         :type embedding_texts: Optional[list]
-        :param kwargs: other model-specific parameters to pass to AWS Bedrock. (ie- topP, stop_sequences, seed, etc.)
+        :param kwargs: other model-specific parameters to pass to AWS Bedrock.
+            (ie- topP, stop_sequences, seed, etc.)
         :type kwargs: Optional[dict]
         :return: Flattened response from AWS Bedrock API and logs for db write
         :rtype: _type_

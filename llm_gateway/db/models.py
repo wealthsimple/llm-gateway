@@ -46,6 +46,7 @@ class CohereRequests(Base):
     cohere_endpoint = Column(String, nullable=False)
     extras = Column(JSON, nullable=True)
 
+
 class AWSBedrockRequests(Base):
     __tablename__ = "awsbedrock_requests"
     id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
