@@ -21,12 +21,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from llm_gateway.constants import AppEnv, get_settings
 from llm_gateway.routers.cohere_api import router as CohereRouter
 from llm_gateway.routers.openai_api import router as OpenAIRouter
+from llm_gateway.routers.awsbedrock_api import router as AWSBedrockRouter
 
 settings = get_settings()
 
 api_app = FastAPI()
 api_app.include_router(OpenAIRouter, prefix="/openai")
 api_app.include_router(CohereRouter, prefix="/cohere")
+api_app.include_router(AWSBedrockRouter, prefix="/awsbedrock")
 
 # allow CORS for local development with frontend
 if settings.APP_ENV in (AppEnv.DEVELOPMENT, AppEnv.STAGING):

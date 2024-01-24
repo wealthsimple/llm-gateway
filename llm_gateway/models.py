@@ -63,3 +63,17 @@ class EditInput(BaseModel):
 class EmbeddingInput(BaseModel):
     embedding_texts: List[str]
     model: str = "text-embedding-ada-002"
+
+
+class AWSBedrockTextInput(BaseModel):
+    model: str
+    max_tokens: int
+    prompt: str = ""
+    temperature: float = 0
+    model_kwargs: dict = {}
+
+
+class AWSBedrockEmbedInput(BaseModel):
+    model: str
+    max_tokens: int
+    embedding_texts: List[str] = []
