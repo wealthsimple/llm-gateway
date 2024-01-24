@@ -122,6 +122,15 @@ export const ModelSettingsDialog: React.FC<Props> = ({
                 </b>
                 {modelChoices[selectedOption].maxTokensLimit} tokens <br />
               </li>
+              <li>
+                <b>
+                  <span role="img" aria-label="blink">
+                    ⚙️
+                  </span>{' '}
+                  Requirements:{' '}
+                </b>
+                {modelChoices[selectedOption].requirements} <br />
+              </li>
             </ul>
           </details>
           <details>

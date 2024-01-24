@@ -25,6 +25,7 @@ import {
   type CohereRequestBody,
   type Settings,
   type ConversationsState,
+  type AWSBedrockRequestBody,
 } from './app/interfaces';
 
 import { environment as PROD_ENV } from './environments/environment.prod';
@@ -54,6 +55,27 @@ const CohereParseResponse = (response: any) => {
   return response.data[0];
 };
 
+const AWSBedrockLlamaChatParseResponse = (response: any) => {
+  return response.generation
+}
+
+const AWSBedrockJurassic2TextParseResponse = (response: any) => {
+  return response.completions[0].data.text;
+}
+
+const AWSBedrockTitanTextParseResponse = (response: any) => {
+  return response.results[0].outputText;
+}
+
+const AWSBedrockClaudeTextParseResponse = (response: any) => {
+  return response.completion;
+}
+
+const AWSBedrockCohereTextParseResponse = (response: any) => {
+  return response.generations[0].text;
+}
+
+
 const DEFAULT_INITIAL_PROMPT = [
   { role: Role.system, content: 'You are an intelligent assistant.' },
   { role: Role.user, content: 'Hello!' },
@@ -61,6 +83,7 @@ const DEFAULT_INITIAL_PROMPT = [
 ];
 
 export const modelChoices: Models = {
+  // Cohere models
   cohere: {
     name: 'Cohere - command-light',
     distributor: 'Cohere',
@@ -70,6 +93,7 @@ export const modelChoices: Models = {
     maxTokensLimit: 4096,
     isSecureModel: false,
     supportFileUpload: false,
+    requirements: "Cohere Account",
     advanceMetadata: {
       'Hosted on': 'Cohere Cloud',
       'Inference Hardware': 'GPU',
@@ -85,6 +109,7 @@ export const modelChoices: Models = {
       } as CohereRequestBody),
     responseHandler: CohereParseResponse,
   },
+  // OpenAI models
   gpt_3_5_turbo: {
     name: 'GPT 3.5 Turbo',
     distributor: 'OpenAI',
@@ -94,6 +119,7 @@ export const modelChoices: Models = {
     maxTokensLimit: 4096,
     isSecureModel: false,
     supportFileUpload: false,
+    requirements: "OpenAI Account",
     advanceMetadata: {
       'Hosted on': 'OpenAI Cloud',
       'Inference Hardware': 'GPU',
@@ -117,6 +143,7 @@ export const modelChoices: Models = {
     maxTokensLimit: 16384,
     isSecureModel: false,
     supportFileUpload: false,
+    requirements: "OpenAI Account",
     advanceMetadata: {
       'Hosted on': 'OpenAI Cloud',
       'Context window': '16k',
@@ -139,6 +166,7 @@ export const modelChoices: Models = {
     maxTokensLimit: 8192,
     isSecureModel: false,
     supportFileUpload: false,
+    requirements: "OpenAI Account",
     advanceMetadata: {
       'Hosted on': 'OpenAI Cloud',
       'Inference Hardware': 'GPU',
@@ -151,6 +179,356 @@ export const modelChoices: Models = {
         temperature: req.temperature,
       } as OpenAIRequestBody),
     responseHandler: OpenAIParseResponse,
+  },
+  // AWS Bedrock models
+  meta_llama2_13b: {
+    name: 'Llama 2 13B',
+    distributor: 'Meta',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Fine-tuned model in the parameter size of 13B. Suitable for smaller-scale tasks such as text classification, sentiment analysis, and language translation.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 4096,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '4k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'meta.llama2-13b-chat-v1',
+        max_tokens: 500, // TODO : add model config dialog to remove hardcoded values (i.e max_tokens, temperature, model_kwargs)
+        temperature: req.temperature,
+        instructions: DEFAULT_INITIAL_PROMPT[0].content,
+        model_kwargs: {
+          "top_p": 0.9
+        },
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockLlamaChatParseResponse,
+  },
+  meta_llama2_70b: {
+    name: 'Llama 2 70B',
+    distributor: 'Meta',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Fine-tuned model in the parameter size of 70B. Suitable for larger-scale tasks such as language modeling, text generation, and dialogue systems.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 4096,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '4k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'meta.llama2-70b-chat-v1',
+        max_tokens: 500,
+        temperature: req.temperature,
+        instruction: DEFAULT_INITIAL_PROMPT[0].content,
+        model_kwargs: {
+          "top_p": 0.9
+        },
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockLlamaChatParseResponse,
+  },
+  ai21_jurassic2_mid: {
+    name: 'Jurassic-2 Mid',
+    distributor: 'AI21 Labs',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'AI21\'s mid-sized model, designed to strike the right balance between exceptional quality and affordability.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 8192,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '8k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'ai21.j2-mid-v1',
+        max_tokens: 4096,
+        temperature: req.temperature,
+        model_kwargs: {
+          "topP": 1,
+          "countPenalty":{
+            "scale": 0
+          },
+          "presencePenalty":{
+            "scale": 0
+          },
+          "frequencyPenalty":{
+            "scale": 0
+          }
+        }
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockJurassic2TextParseResponse,
+  },
+  ai21_jurrasic2_ultra: {
+    name: 'Jurassic-2 Ultra',
+    distributor: 'AI21 Labs',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'AI21\'s most powerful model, offering exceptional quality.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 8192,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '8k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'ai21.j2-ultra-v1',
+        max_tokens: 4096,
+        temperature: req.temperature,
+        model_kwargs: {
+          "topP": 1,
+          "countPenalty":{
+            "scale": 0
+          },
+          "presencePenalty":{
+            "scale": 0
+          },
+          "frequencyPenalty":{
+            "scale": 0
+          }
+        }
+      } as AWSBedrockRequestBody),
+      responseHandler: AWSBedrockJurassic2TextParseResponse,
+    },
+  amazon_titan_light: {
+    name: 'Titan Text Light',
+    distributor: 'Amazon',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Right-sized for specific use cases, ideal for text generation tasks and fine-tuning.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 4000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '4k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'amazon.titan-text-lite-v1',
+        max_tokens: 2000,
+        temperature: req.temperature,
+        model_kwargs: {
+          "stopSequences": [],
+          "topP": 1
+        }
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockTitanTextParseResponse,
+  },
+  amazon_titan_express: {
+    name: 'Titan Text Express',
+    distributor: 'Amazon',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'LLM offering a balance of price and performance.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 8000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '8k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'amazon.titan-text-express-v1',
+        max_tokens: 4000,
+        temperature: req.temperature,
+        model_kwargs: {
+          "stopSequences": [],
+          "topP": 1
+        }
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockTitanTextParseResponse,
+  },
+  anthropic_claude_v1: {
+    name: 'Claude 1.3',
+    distributor: 'Anthropic',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Claude 1.3 is an earlier version of Anthropic\'s general-purpose LLM.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 100000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '100k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'anthropic.claude-v1',
+        max_tokens: 500,
+        temperature: req.temperature,
+        model_kwargs: {
+          "top_k": 250,
+          "top_p": 1,
+          "stop_sequences": [
+            "\n\nHuman:"
+          ],
+        }
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockClaudeTextParseResponse,
+  },
+  anthropic_claude_v2: {
+    name: 'Claude 2.0',
+    distributor: 'Anthropic',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Claude 2.0 is a leading LLM from Anthropic that enables a wide range of tasks from sophisticated dialogue and creative content generation to detailed instruction.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 100000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '100k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'anthropic.claude-v2',
+        max_tokens: 100000,
+        temperature: req.temperature,
+        model_kwargs: {
+          "top_k": 250,
+          "top_p": 1,
+          "stop_sequences": [
+            "\n\nHuman:"
+          ],
+        }
+      } as AWSBedrockRequestBody),
+      responseHandler: AWSBedrockClaudeTextParseResponse,
+    },
+  anthropic_claude_v2_1: {
+    name: 'Claude 2.1',
+    distributor: 'Anthropic',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Claude 2.1 is Anthropic\'s latest large language model (LLM) with an industry-leading 200K token context window, reduced hallucination rates, and improved accuracy over long documents.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 200000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '200k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'anthropic.claude-v2:1',
+        max_tokens: 200000,
+        temperature: req.temperature,
+        model_kwargs: {
+          "top_k": 250,
+          "top_p": 1,
+          "stop_sequences": [
+            "\n\nHuman:"
+          ],
+        }
+      } as AWSBedrockRequestBody),
+      responseHandler: AWSBedrockClaudeTextParseResponse,
+    },
+  anthropic_claude_instant_v1: {
+    name: 'Claude Instant',
+    distributor: 'Anthropic',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Claude Instant is Anthropic\'s faster, lower-priced yet very capable LLM.',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 100000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '100k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'anthropic.claude-instant-v1',
+        max_tokens: 100000,
+        temperature: req.temperature,
+        model_kwargs: {
+          "top_k": 250,
+          "top_p": 1,
+          "stop_sequences": [
+            "\n\nHuman:"
+          ],
+        }
+      } as AWSBedrockRequestBody),
+      responseHandler: AWSBedrockClaudeTextParseResponse,
+    },
+  cohere_command_v14: {
+    name: 'Command',
+    distributor: 'Cohere',
+    apiEndpoint: `${appEnv.apiBaseURL}/api/awsbedrock/text`,
+    description:
+      'Command is Cohere\'s generative large language model (LLM) (52B parameters).',
+    initialPrompt: DEFAULT_INITIAL_PROMPT,
+    maxTokensLimit: 4000,
+    isSecureModel: false,
+    supportFileUpload: false,
+    requirements: "AWS Account + Bedrock Enabled",
+    advanceMetadata: {
+      'Hosted on': 'Amazon Web Services (Bedrock)',
+      'Inference Hardware': 'GPU',
+      'Context window': '4k',
+    },
+    requestBody: (req: IRequestBody) =>
+      ({
+        prompt: req.messages.at(-1)?.content,
+        model: 'cohere.command-text-v14',
+        max_tokens: 4000,
+        temperature: req.temperature,
+        model_kwargs: {
+          "p": 0.75,
+          "k": 0,
+          "stop_sequences": [],
+          "return_likelihoods": "NONE"
+        }
+      } as AWSBedrockRequestBody),
+    responseHandler: AWSBedrockCohereTextParseResponse,
   },
 };
 

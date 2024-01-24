@@ -2,4 +2,8 @@ export OPENAI_API_KEY=
 export COHERE_API_KEY=
 export EXTRA_RUN_OPTIONS=--reload
 
+export AWS_REGION=
+export AWS_PUBLIC_ACCESS_KEY=
+export AWS_PRIVATE_ACCESS_KEY=
+
 export DATABASE_URL=postgresql://postgres:postgres@postgres:5432/llm_gateway
