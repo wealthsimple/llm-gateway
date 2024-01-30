@@ -15,46 +15,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import enum
+
 from sqlalchemy import JSON, Column, DateTime, Float, Integer, String
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 
-class OpenAIRequests(Base):
-    __tablename__ = "openai_requests"
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
+class Provider(enum.StrEnum):
+    OPENAI = "openai_requests"
+    COHERE = "cohere_requests"
+    AWSBEDROCK = "awsbedrock_requests"
+
+
+class CommonRequest(Base):
+    __abstract__ = True
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_input = Column(String, nullable=True)
-    user_email = Column(String, nullable=True)
+    user_email = Column(String, index=True, nullable=True)
+    temperature = Column(Float, nullable=True)
+    created_at = Column(DateTime, index=True, nullable=False)
+    extras = Column(JSON, nullable=True)
+
+
+class OpenAIRequests(CommonRequest):
+    __tablename__ = Provider.OPENAI
     openai_response = Column(JSON, nullable=True)
     openai_model = Column(String, nullable=True)
-    temperature = Column(Float, nullable=True)
-    created_at = Column(DateTime, nullable=False)
     openai_endpoint = Column(String, nullable=False)
-    extras = Column(JSON, nullable=True)
 
 
-class CohereRequests(Base):
-    __tablename__ = "cohere_requests"
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    user_input = Column(String, nullable=True)
-    user_email = Column(String, nullable=True)
+class CohereRequests(CommonRequest):
+    __tablename__ = Provider.COHERE
     cohere_response = Column(JSON, nullable=True)
     cohere_model = Column(String, nullable=True)
-    temperature = Column(Float, nullable=True)
-    created_at = Column(DateTime, nullable=False)
     cohere_endpoint = Column(String, nullable=False)
-    extras = Column(JSON, nullable=True)
 
 
-class AWSBedrockRequests(Base):
-    __tablename__ = "awsbedrock_requests"
-    id = Column(Integer, nullable=False, primary_key=True, autoincrement=True)
-    user_input = Column(String, nullable=True)
-    user_email = Column(String, nullable=True)
+class AWSBedrockRequests(CommonRequest):
+    __tablename__ = Provider.AWSBEDROCK
     awsbedrock_response = Column(JSON, nullable=True)
     awsbedrock_model = Column(String, nullable=True)
-    temperature = Column(Float, nullable=True)
-    created_at = Column(DateTime, nullable=False)
     awsbedrock_endpoint = Column(String, nullable=False)
-    extras = Column(JSON, nullable=True)
