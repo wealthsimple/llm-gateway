@@ -26,10 +26,18 @@ export const CancelIcon = (
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      d="M7.10081 6.5L17.2609 17.5M17.5 6.60982L6.5 17.2803"
-      stroke="black"
-      strokeWidth="1.75"
+      d="M6 6L18 18"
+      stroke="currentColor"
+      strokeWidth="2"
       strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6 18L18 6"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 );

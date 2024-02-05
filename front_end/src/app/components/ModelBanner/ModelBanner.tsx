@@ -18,7 +18,7 @@
 // *****************************************************************************
 
 import React, { useState } from 'react';
-
+import { ThemeToggleButton } from '../ThemeProvider';
 import { DeleteIcon } from '../Icons/TrashCanIcon';
 import { ClearChatConfirmDialogComponent } from './ClearChatConfirmDialog';
 
@@ -42,12 +42,16 @@ export const ModelBannerComponent: React.FC<ModelBannerProps> = (
         }`}
       >
         <div className="model-name">{props.modelName}</div>
-        <div
-          className="clear-chat"
-          onClick={() => setShowClearChatConfirmDialog(true)}
-        >
-          {' '}
-          {DeleteIcon}
+        <div className="banner-actions">
+          <div className="theme-toggle-button">
+            <ThemeToggleButton />
+          </div>
+          <div
+            className="clear-chat"
+            onClick={() => setShowClearChatConfirmDialog(true)}
+          >
+            {DeleteIcon}
+          </div>
         </div>
       </article>
       <ClearChatConfirmDialogComponent

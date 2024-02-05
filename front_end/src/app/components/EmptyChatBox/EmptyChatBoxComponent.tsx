@@ -19,10 +19,14 @@
 
 import React from 'react';
 import { EmptyState } from '../Icons/EmptyStateIllustration';
+import { ThemeToggleButton } from '../ThemeProvider';
 
 export const EmptyChatBoxComponent: React.FC = () => {
   return (
     <div className="empty-state">
+      <div className="theme-toggle-container">
+        <ThemeToggleButton />
+      </div>
       <div className="illustration">{EmptyState}</div>
       <h1> No chat to display!</h1>
       <h3> Create a new chat to start using LLM Gateway.</h3>
