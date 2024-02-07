@@ -1,4 +1,5 @@
 # LLM Gateway
+[Go to gateway](https://llm.wealthsimple.com/)
 
 <p align="center">
   <img src="./docs/images/demo.png" />
