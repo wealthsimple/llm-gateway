@@ -18,6 +18,7 @@
 // *****************************************************************************
 
 import React, { useEffect, useState } from 'react';
+import FileSaver from 'file-saver';
 import {
   modelChoices,
   DEFAULT_MODEL_TEMP,
@@ -122,13 +123,14 @@ export function App(): JSX.Element {
     setConversationState(newConversationState);
   };
 
-  const addConversation = (title: string, model: string) => {
+  const addConversation = (title: string, model: string, existingConversations: Message[]) => {
     const newConversationState = { ...conversationState };
+    const newConversationMessages = existingConversations.length ? existingConversations : modelChoices[model].initialPrompt;
     const newConversation: Conversation = {
       id: Date.now(),
       title: title,
       model: model,
-      messages: modelChoices[model].initialPrompt,
+      messages: newConversationMessages,
     };
     newConversationState.conversations.push(newConversation);
     setConversationState(newConversationState);
@@ -153,6 +155,13 @@ export function App(): JSX.Element {
       setCurrentMessages(newCurrentMessages);
     }
   };
+
+  const downloadChatAsCSV = () => {
+    let csvContent = "id,role,content\n";
+    currentMessages.forEach((message, idx)=> csvContent+=`${idx},${message.role},"${message.content.replaceAll('"','""')}"\n`);
+    const blob = new Blob([csvContent], {type:'text/plain'});
+    FileSaver.saveAs(blob, 'conversation.csv');
+  }
 
   const temperature = DEFAULT_MODEL_TEMP;
   const description = APP_DESCRIPTION;
@@ -188,6 +197,7 @@ export function App(): JSX.Element {
                   modelName={modelChoices[currentModel].name}
                   isModelLoadingReply={isLoadingReply}
                   clearCurrentChatMessagesAction={clearCurrentConversation}
+                  downloadChatAsCSVAction={downloadChatAsCSV}
                 />
                 <ChatBoxComponent
                   messages={currentMessages}
