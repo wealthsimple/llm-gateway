@@ -38,11 +38,45 @@ interface CSVRow {
   content: string;
 }
 
-enum ErroMessage {
+enum ErrorMessage {
   notCSV = "Error loading file, please ensure the file is a .csv file and contains the columns 'role', 'content'",
   secureModelsOnly = 'Previous chats can only be uploaded to secure models, file is removed.',
   missingColumns = "'role' or 'content' columns are missing",
 }
+
+export const parseCSVFn = async (
+  selectedFile: any, // eslint-disable @typescript-eslint/no-explicit-any
+  resetCSVFile: (arg: boolean) => void,
+): Promise<Message[]> => {
+  return new Promise((resolve, reject) => {
+    Papa.parse<CSVRow>(selectedFile, {
+      header: true,
+      delimiter: ',',
+      quoteChar: '"',
+      skipEmptyLines: true,
+      error: (e) => {
+        reject(e.message);
+      },
+      complete: function (results) {
+        const data = results.data;
+        const uploadedMessages: Message[] = [];
+        data.forEach(({ role, content }) => {
+          if (role && content) {
+            const message: Message = {
+              role: role as Role,
+              content: content,
+            };
+            uploadedMessages.push(message);
+          } else {
+            resetCSVFile(true);
+            reject(ErrorMessage.missingColumns);
+          }
+        });
+        resolve(uploadedMessages);
+      },
+    });
+  });
+};
 
 const notSecureModelNames = Object.entries(modelChoices)
   .filter(([, val]) => !val.isSecureModel)
@@ -73,7 +107,7 @@ export const ModelSettingsDialog: React.FC<Props> = ({
     if (notSecureModelNames.includes(newSelection) && csvFileRef.current) {
       if (csvFileRef.current.value) {
         resetCSVFile(true);
-        setCSVError(ErroMessage.secureModelsOnly);
+        setCSVError(ErrorMessage.secureModelsOnly);
       }
     } else {
       setCSVError('');
@@ -104,42 +138,22 @@ export const ModelSettingsDialog: React.FC<Props> = ({
     const selectedFile = (event.target as HTMLInputElement).files?.[0];
 
     if (!selectedFile || (selectedFile && !selectedFile.name.endsWith('csv'))) {
-      setCSVError(ErroMessage.notCSV);
+      setCSVError(ErrorMessage.notCSV);
       return;
     }
     if (notSecureModelNames.includes(selectedOption)) {
-      setCSVError(ErroMessage.secureModelsOnly);
+      setCSVError(ErrorMessage.secureModelsOnly);
       resetCSVFile(true);
       return;
     }
     setCSVError('');
-
-    Papa.parse<CSVRow>(selectedFile, {
-      header: true,
-      delimiter: ',',
-      quoteChar: '"',
-      skipEmptyLines: true,
-      error: (e) => setCSVError(e.message),
-      complete: function (results) {
-        const data = results.data;
-        const uploadedMessages: Message[] = [];
-        data.forEach(({ role, content }) => {
-          if (role && content) {
-            const message: Message = {
-              role: role as Role,
-              content: content,
-            };
-            uploadedMessages.push(message);
-          } else {
-            setCSVError(ErroMessage.missingColumns);
-            resetCSVFile(true);
-            return;
-          }
-        });
-        setCSVConversations(uploadedMessages);
-      },
-    });
-  }
+    parseCSVFn(selectedFile, resetCSVFile)
+      .then((messages: Message[]) =>
+        setCSVConversations(messages),
+      ).catch((e) => {
+        setCSVError(e);
+      });
+  };
 
   return (
     <dialog open={showSettings}>

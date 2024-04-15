@@ -55,7 +55,19 @@ const loadConversationsStateFromLocalStorage = (): ConversationsState => {
   return DEFAULT_CONVERSATIONS_STATE;
 };
 
-export function App(): JSX.Element {
+const downloadChatAsCSVFn = (currentMessages: Message[]) => {
+  let csvContent = 'id,role,content\n';
+  currentMessages.forEach(
+    (message, idx) =>
+      (csvContent += `${idx},${message.role},"${message.content.replaceAll(
+        '"',
+        '""',
+      )}"\n`),
+  );
+  return csvContent;
+};
+
+function App(): JSX.Element {
   const [conversationState, setConversationState] =
     useState<ConversationsState>(loadConversationsStateFromLocalStorage());
 
@@ -157,11 +169,10 @@ export function App(): JSX.Element {
   };
 
   const downloadChatAsCSV = () => {
-    let csvContent = "id,role,content\n";
-    currentMessages.forEach((message, idx)=> csvContent+=`${idx},${message.role},"${message.content.replaceAll('"','""')}"\n`);
-    const blob = new Blob([csvContent], {type:'text/plain'});
-    FileSaver.saveAs(blob, 'conversation.csv');
-  }
+    const csvContent = downloadChatAsCSVFn(currentMessages);
+    const blob = new Blob([csvContent], { type: 'text/plain' });
+    FileSaver.saveAs(blob, 'conversations.csv');
+  };
 
   const temperature = DEFAULT_MODEL_TEMP;
   const description = APP_DESCRIPTION;
@@ -224,3 +235,5 @@ export function App(): JSX.Element {
     </>
   );
 }
+
+export { App, downloadChatAsCSVFn };
