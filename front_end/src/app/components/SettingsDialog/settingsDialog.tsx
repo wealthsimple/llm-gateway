@@ -17,14 +17,70 @@
 // limitations under the License.
 // *****************************************************************************
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import Papa from 'papaparse';
 import { DEFAULT_SETTINGS, modelChoices } from '../../../constants';
+import { type Message, type Role } from '../../interfaces';
 
 interface Props {
   showSettings: boolean;
   setShowSettings: (arg: boolean) => void;
-  createNewConversation: (title: string, model: string) => void;
+  createNewConversation: (
+    title: string,
+    model: string,
+    existingConversations: Message[],
+  ) => void;
 }
+
+interface CSVRow {
+  id: number;
+  role: string;
+  content: string;
+}
+
+enum ErrorMessage {
+  notCSV = "Error loading file, please ensure the file is a .csv file and contains the columns 'role', 'content'",
+  secureModelsOnly = 'Previous chats can only be uploaded to secure models, file is removed.',
+  missingColumns = "'role' or 'content' columns are missing",
+}
+
+export const parseCSVFn = async (
+  selectedFile: any, // eslint-disable @typescript-eslint/no-explicit-any
+  resetCSVFile: (arg: boolean) => void,
+): Promise<Message[]> => {
+  return new Promise((resolve, reject) => {
+    Papa.parse<CSVRow>(selectedFile, {
+      header: true,
+      delimiter: ',',
+      quoteChar: '"',
+      skipEmptyLines: true,
+      error: (e) => {
+        reject(e.message);
+      },
+      complete: function (results) {
+        const data = results.data;
+        const uploadedMessages: Message[] = [];
+        data.forEach(({ role, content }) => {
+          if (role && content) {
+            const message: Message = {
+              role: role as Role,
+              content: content,
+            };
+            uploadedMessages.push(message);
+          } else {
+            resetCSVFile(true);
+            reject(ErrorMessage.missingColumns);
+          }
+        });
+        resolve(uploadedMessages);
+      },
+    });
+  });
+};
+
+const notSecureModelNames = Object.entries(modelChoices)
+  .filter(([, val]) => !val.isSecureModel)
+  .map(([k]) => k);
 
 export const ModelSettingsDialog: React.FC<Props> = ({
   showSettings,
@@ -32,26 +88,71 @@ export const ModelSettingsDialog: React.FC<Props> = ({
   createNewConversation,
 }) => {
   const [selectedOption, setSelectedOption] = useState(DEFAULT_SETTINGS.model);
+  const [csvError, setCSVError] = useState('');
   const [newTitle, setNewTitle] = useState('');
+  const csvFileRef = useRef<HTMLInputElement>(null);
+  const [csvConversations, setCSVConversations] = useState<Message[]>([]);
 
   const createConversation = () => {
     let title = newTitle.trim();
     if (!title) {
       title = "Untitled Chat";
     }
-    createNewConversation(title, selectedOption);
+    createNewConversation(title, selectedOption, csvConversations);
     closeModal();
   };
 
   const triggerChangeModel = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newSelection = event.target.value;
+    if (notSecureModelNames.includes(newSelection) && csvFileRef.current) {
+      if (csvFileRef.current.value) {
+        resetCSVFile(true);
+        setCSVError(ErrorMessage.secureModelsOnly);
+      }
+    } else {
+      setCSVError('');
+    }
     setSelectedOption(newSelection);
+  };
+
+  const resetCSVFile = (removeConversations: boolean) => {
+    if (removeConversations) {
+      setCSVConversations([]);
+    }
+    if (csvFileRef.current) {
+      if (csvFileRef.current.value) {
+        csvFileRef.current.value = '';
+      }
+    }
   };
 
   const closeModal = () => {
     setShowSettings(false);
     setNewTitle('');
     setSelectedOption(DEFAULT_SETTINGS.model);
+    resetCSVFile(false);
+    setCSVError('');
+  };
+
+  const handleLoadCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = (event.target as HTMLInputElement).files?.[0];
+
+    if (!selectedFile || (selectedFile && !selectedFile.name.endsWith('csv'))) {
+      setCSVError(ErrorMessage.notCSV);
+      return;
+    }
+    if (notSecureModelNames.includes(selectedOption)) {
+      setCSVError(ErrorMessage.secureModelsOnly);
+      resetCSVFile(true);
+      return;
+    }
+    setCSVError('');
+    parseCSVFn(selectedFile, resetCSVFile)
+      .then((messages: Message[]) =>
+        setCSVConversations(messages),
+      ).catch((e) => {
+        setCSVError(e);
+      });
   };
 
   return (
@@ -97,6 +198,16 @@ export const ModelSettingsDialog: React.FC<Props> = ({
               )}
             </optgroup>
           </select>
+        </div>
+        <div>
+          <label>(Optional) Upload Previous Chats</label>
+          {csvError && <p className="error-message">{csvError}</p>}
+          <input
+            type="file"
+            placeholder="Chat Title"
+            onChange={handleLoadCSV}
+            ref={csvFileRef}
+          />
         </div>
         <p>{modelChoices[selectedOption].description}</p>
         <p>

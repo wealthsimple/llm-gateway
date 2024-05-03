@@ -20,12 +20,14 @@
 import React, { useState } from 'react';
 import { ThemeToggleButton } from '../ThemeProvider';
 import { DeleteIcon } from '../Icons/TrashCanIcon';
+import { DownloadIcon } from '../Icons/DownloadIcon';
 import { ClearChatConfirmDialogComponent } from './ClearChatConfirmDialog';
 
 interface ModelBannerProps {
   modelName: string;
   isModelLoadingReply: boolean;
   clearCurrentChatMessagesAction: () => void;
+  downloadChatAsCSVAction: () => void;
 }
 
 export const ModelBannerComponent: React.FC<ModelBannerProps> = (
@@ -45,6 +47,12 @@ export const ModelBannerComponent: React.FC<ModelBannerProps> = (
         <div className="banner-actions">
           <div className="theme-toggle-button">
             <ThemeToggleButton />
+          </div>
+          <div
+            className="export-chat"
+            onClick={() => props.downloadChatAsCSVAction()}
+          >
+            {DownloadIcon}
           </div>
           <div
             className="clear-chat"

@@ -146,7 +146,7 @@ export const ChatBoxComponent: React.FC<ChatBoxProps> = ({
       </div>
 
       {errMsg ? (
-        <p id="error-message">{errMsg}</p>
+        <p className="error-message">{errMsg}</p>
       ) : (
         <p className="helpful-tip">
           Press enter to send a message, shift+enter to make a multi-line
