@@ -18,6 +18,7 @@
 // *****************************************************************************
 
 import React, { useEffect, useState } from 'react';
+import FileSaver from 'file-saver';
 import {
   modelChoices,
   DEFAULT_MODEL_TEMP,
@@ -54,7 +55,19 @@ const loadConversationsStateFromLocalStorage = (): ConversationsState => {
   return DEFAULT_CONVERSATIONS_STATE;
 };
 
-export function App(): JSX.Element {
+const downloadChatAsCSVFn = (currentMessages: Message[]) => {
+  let csvContent = 'id,role,content\n';
+  currentMessages.forEach(
+    (message, idx) =>
+      (csvContent += `${idx},${message.role},"${message.content.replaceAll(
+        '"',
+        '""',
+      )}"\n`),
+  );
+  return csvContent;
+};
+
+function App(): JSX.Element {
   const [conversationState, setConversationState] =
     useState<ConversationsState>(loadConversationsStateFromLocalStorage());
 
@@ -122,13 +135,14 @@ export function App(): JSX.Element {
     setConversationState(newConversationState);
   };
 
-  const addConversation = (title: string, model: string) => {
+  const addConversation = (title: string, model: string, existingConversations: Message[]) => {
     const newConversationState = { ...conversationState };
+    const newConversationMessages = existingConversations.length ? existingConversations : modelChoices[model].initialPrompt;
     const newConversation: Conversation = {
       id: Date.now(),
       title: title,
       model: model,
-      messages: modelChoices[model].initialPrompt,
+      messages: newConversationMessages,
     };
     newConversationState.conversations.push(newConversation);
     setConversationState(newConversationState);
@@ -152,6 +166,12 @@ export function App(): JSX.Element {
       const newCurrentMessages = modelChoices[currentModel].initialPrompt;
       setCurrentMessages(newCurrentMessages);
     }
+  };
+
+  const downloadChatAsCSV = () => {
+    const csvContent = downloadChatAsCSVFn(currentMessages);
+    const blob = new Blob([csvContent], { type: 'text/plain' });
+    FileSaver.saveAs(blob, 'conversations.csv');
   };
 
   const temperature = DEFAULT_MODEL_TEMP;
@@ -188,6 +208,7 @@ export function App(): JSX.Element {
                   modelName={modelChoices[currentModel].name}
                   isModelLoadingReply={isLoadingReply}
                   clearCurrentChatMessagesAction={clearCurrentConversation}
+                  downloadChatAsCSVAction={downloadChatAsCSV}
                 />
                 <ChatBoxComponent
                   messages={currentMessages}
@@ -214,3 +235,5 @@ export function App(): JSX.Element {
     </>
   );
 }
+
+export { App, downloadChatAsCSVFn };
