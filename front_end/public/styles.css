@@ -231,19 +231,25 @@
 
 .model-banner .banner-actions,
 .model-banner .theme-toggle-button,
-.model-banner .clear-chat {
+.model-banner .clear-chat,
+.model-banner .export-chat {
   display: flex;
   align-items: center;
 }
 
 .model-banner .theme-toggle-button,
-.model-banner .clear-chat {
+.model-banner .clear-chat,
+.model-banner .export-chat {
   margin: 0;
   padding: 12px;
   height: 24px;
 
 }
 
+.model-banner .export-chat svg {
+  stroke: var(--slate-element-bg);
+  cursor: pointer;
+}
 
 .theme-toggle-button {
   background-color: transparent;
@@ -292,10 +298,11 @@
   font-size: 16px;
 }
 
-#error-message {
+.error-message {
   color: var(--negative-fg-strong);
   font-weight: 400;
   margin: 0;
+  line-height: 24px;
 }
 
 .chatbox .helpful-tip {
