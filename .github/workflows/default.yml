@@ -11,7 +11,7 @@ concurrency:
 jobs:
   check_modified_files:
     name: Check modified files
-    runs-on: ubuntu-22.04
+    runs-on: ${{ vars.DEFAULT_RUNS_ON }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -37,7 +37,7 @@ jobs:
   frontend_test:
     name: Tests & Lints LLM Gateway Frontend
     if: needs.check_modified_files.outputs.frontend_modified == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.DEFAULT_RUNS_ON }}
     needs:
       - check_modified_files
     steps:
@@ -64,7 +64,7 @@ jobs:
 
   backend_tests:
     name: Tests & Lints LLM Gateway Backend
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.DEFAULT_RUNS_ON }}
     steps:
       - uses: actions/checkout@v3
 
