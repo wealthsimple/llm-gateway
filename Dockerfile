@@ -52,7 +52,7 @@ CMD ["pytest"]
 
 ##############################################
 
-FROM node:16.13.1 as frontend-pre-builder
+FROM node:22.13.1 as frontend-pre-builder
 
 WORKDIR /usr/src/app
 
