@@ -8,8 +8,9 @@ authors = [
 license = { text = "Apache-2.0" }
 requires-python = ">=3.11.3,<3.12"
 [tool.setuptools]
+package-dir = {"" = "."}
 packages = ["llm_gateway"]
-py_modules = []
+exclude = ["alembic*", "fixtures*", "front_end*", "tests*"]
 dependencies = [
     "aiohttp>=3.9.4",
     "alembic>=1.8.1",
