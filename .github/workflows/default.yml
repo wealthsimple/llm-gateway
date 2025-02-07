@@ -28,7 +28,8 @@ jobs:
               - "Dockerfile"
               - 'llm_service/**'
               - pyproject.toml
-              - poetry.lock
+              - requirements.txt
+              - requirements.dev.txt
     outputs:
       frontend_modified: ${{ steps.check-files.outputs.frontend_modified }}
       backend_modified: ${{ steps.check-files.outputs.backend_modified }}
@@ -68,26 +69,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Poetry
-        run: pip install poetry==1.3.2 # gitleaks:allow
-
       - uses: actions/setup-python@v4
         with:
           python-version-file: .python-version
-          cache: poetry
+
+      - name: Install uv
+        run: pip install uv
 
       - name: Install Python dependencies
         working-directory: ${{ github.workspace }}
         run: |
-          poetry install --no-root --no-interaction
+          uv pip install --system -r requirements.txt -r requirements.dev.txt
+          uv pip install --system -e .
 
       - name: Run style guide, linter and typing checks
         working-directory: ${{ github.workspace }}
         run: |
-          source $(poetry env info --path)/bin/activate
-          flake8 llm_gateway
+          python -m flake8 llm_gateway
 
       - name: Run Python Test Suite
-        run: poetry run pytest
+        run: python -m pytest tests/
         env:
           DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/llm_gateway"
