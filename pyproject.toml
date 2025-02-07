@@ -1,0 +1,14 @@
+[project]
+name = "llm-gateway"
+version = "0.1.0"
+description = "Service to facilitate access to large language models"
+authors = [
+    {name = "Data Science & Engineering at Wealthsimple", email = "data@wealthsimple.com"}
+]
+license = "Apache-2.0"
+requires-python = ">=3.11.3,<3.12"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
