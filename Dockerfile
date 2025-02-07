@@ -4,31 +4,21 @@ LABEL maintainer="Data Science & Engineering @ Wealthsimple <data@wealthsimple.c
 
 ##############################################
 
-# This layer is only intended for local dev.
-# It manually compiles librdkafka so that everything else works on M1.
-# it also uses a public, infrequently-changing Docker image
-# so that this step can be run less often.
-# It should get skipped during a normal build
-
-FROM python:3.11-bullseye as base-dev
-
-##############################################
-
 FROM $BASE_LAYER as backend-builder
 
-RUN pip install poetry==1.3.2
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN pip install uv
 
 WORKDIR /usr/src/app
 
-RUN poetry config virtualenvs.in-project true
-RUN poetry config virtualenvs.create false --local
+# Copy requirements files first for caching
+COPY --chown=nobody:nogroup requirements.txt requirements.dev.txt pyproject.toml ./
 
-# Copy pyproject and lock files first. This allows us to cache
-# dependencies even when source files are changed.
-COPY --chown=nobody:nogroup poetry.lock pyproject.toml ./
-
-# Install dependencies.
-RUN poetry install --only main --no-interaction --no-root
+# Install dependencies
+RUN uv pip install --system -r requirements.txt
 
 # Copy remaining files, except those listed in .dockerignore
 # This step is almost guaranteed to bust cache, so don't put anything heavy beyond this point.
@@ -41,10 +31,10 @@ COPY --chown=nobody:nogroup ./alembic/ ./alembic/
 
 FROM backend-builder as backend-test-suite
 
-RUN poetry install --no-interaction --no-root
+RUN uv pip install --system -r requirements.dev.txt
 
-# when running poetry without venvs, it fails to install the llm_gateway package
-RUN pip install -e .
+# Install the package in editable mode
+RUN uv pip install --system -e .
 
 COPY --chown=nobody:nogroup ./tests/ ./tests/
 
@@ -80,5 +70,9 @@ RUN yarn build-production
 
 # Copy frontend build artifacts into the backend image
 FROM backend-builder as application
+
+# Install production dependencies only
+RUN uv pip install --system -r requirements.txt
+
 COPY --from=frontend-builder-production /usr/src/app/build/ /usr/src/app/front_end/build-production/
 COPY --from=frontend-builder-staging /usr/src/app/build/ /usr/src/app/front_end/build-staging/

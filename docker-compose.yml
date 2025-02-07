@@ -23,7 +23,7 @@ services:
             target: backend-builder
         env_file:
             - .envrc
-        command: alembic upgrade head
+        command: uv pip install --system -e . && alembic upgrade head
         depends_on:
             postgres:
                 condition: service_healthy
@@ -34,7 +34,9 @@ services:
             dockerfile: Dockerfile
             target: backend-builder
         container_name: llm-gateway-backend
-        command: uvicorn --host 0.0.0.0 --port 5000 llm_gateway.app:app --reload
+        command: >
+            bash -c "uv pip install -e . &&
+            uvicorn --host 0.0.0.0 --port 5000 llm_gateway.app:app --reload"
         env_file:
             - .envrc
         ports:
