@@ -1,0 +1,29 @@
+name: Guardrails
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  backend-test:
+    name: Tests & Lints LLM Gateway Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11.3'
+      - name: Install Python dependencies
+        run: |
+          pip install uv
+          uv pip install -r requirements.txt -r requirements.dev.txt
+      - name: Run style guide, linter and typing checks
+        run: |
+          black --check .
+          isort --check-only .
+          flake8 .
+      - name: Run Python Test Suite
+        run: |
+          pytest tests/
