@@ -7,6 +7,9 @@ authors = [
 ]
 license = { text = "Apache-2.0" }
 requires-python = ">=3.11.3,<3.12"
+[tool.setuptools]
+packages = ["llm_gateway"]
+py_modules = []
 dependencies = [
     "aiohttp>=3.9.4",
     "alembic>=1.8.1",
