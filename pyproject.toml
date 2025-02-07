@@ -7,10 +7,12 @@ authors = [
 ]
 license = { text = "Apache-2.0" }
 requires-python = ">=3.11.3,<3.12"
-[tool.setuptools]
-package-dir = {"" = "."}
-packages = ["llm_gateway"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["llm_gateway*"]
 exclude = ["alembic*", "fixtures*", "front_end*", "tests*"]
+
+[project]
 dependencies = [
     "aiohttp>=3.9.4",
     "alembic>=1.8.1",
