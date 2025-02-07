@@ -15,15 +15,22 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11.3'
+          cache: 'pip'
+      - name: Install uv
+        run: pip install uv
       - name: Install Python dependencies
         run: |
-          pip install uv
+          uv venv
+          source .venv/bin/activate
           uv pip install -r requirements.txt -r requirements.dev.txt
+          uv pip install -e .
       - name: Run style guide, linter and typing checks
         run: |
+          source .venv/bin/activate
           black --check .
           isort --check-only .
           flake8 .
       - name: Run Python Test Suite
         run: |
+          source .venv/bin/activate
           pytest tests/
