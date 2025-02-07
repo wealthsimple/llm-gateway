@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Prompt, PromptTheme, PROMPT_THEMES } from '../../interfaces';
+import './PromptLibrary.css';
 import { PromptCard } from './PromptCard';
 import { CreatePromptDialog } from './CreatePromptDialog';
 
