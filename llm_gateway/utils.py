@@ -17,11 +17,13 @@
 
 import traceback
 from functools import wraps
-from typing import Any, Callable, Iterator, List
+from typing import Any, Callable, Dict, Iterator, List, TypeVar
 
 from fastapi import HTTPException
 
 from llm_gateway.logger import get_logger
+
+T = TypeVar("T")
 
 logger = get_logger(__name__)
 
@@ -56,16 +58,18 @@ def max_retries(times: int, exceptions: tuple = (Exception,)):
 
 
 class StreamProcessor:
-    def __init__(self, stream_processor: Callable) -> None:
+    def __init__(
+        self, stream_processor: Callable[[Iterator[T]], Iterator[Dict[str, Any]]]
+    ) -> None:
         self.stream_processor = stream_processor
-        self.cached_streamed_response = []
+        self.cached_streamed_response: List[Dict[str, Any]] = []
 
-    def process_stream(self, response: Iterator) -> Iterator:
+    def process_stream(self, response: Iterator[T]) -> Iterator[Dict[str, Any]]:
         for item in self.stream_processor(response):
             self.cached_streamed_response.append(item)
             yield item
 
-    def get_cached_streamed_response(self) -> List[str]:
+    def get_cached_streamed_response(self) -> List[Dict[str, Any]]:
         return self.cached_streamed_response
 
 

@@ -17,7 +17,7 @@
 
 import datetime
 import json
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import openai
 
@@ -26,6 +26,7 @@ from llm_gateway.db.models import OpenAIRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.exceptions import OPENAI_EXCEPTIONS
 from llm_gateway.pii_scrubber import scrub_all
+from llm_gateway.types import DBRecord, OpenAIResponse
 from llm_gateway.utils import StreamProcessor, max_retries
 
 settings = get_settings()
@@ -70,7 +71,9 @@ class OpenAIWrapper:
                 f"`{endpoint}` not supported action for `{module}`"
             )
 
-    def _call_model_endpoint(self, endpoint: str, model: Optional[str] = None):
+    def _call_model_endpoint(
+        self, endpoint: str, model: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         List or retrieve model(s) from OpenAI
 
@@ -79,8 +82,8 @@ class OpenAIWrapper:
         :param model: Name of model, if "retrieve" is passed, defaults to None
         :type model: Optional[str]
         :raises Exception: Raised if endpoint is "retrieve" and model is unspecified
-        :return: List of models or retrieved model
-        :rtype: _type_
+        :return: OpenAI API response containing model information
+        :rtype: Dict[str, Any]
         """
         if endpoint == "list":
             return openai.Model.list()
@@ -199,11 +202,11 @@ class OpenAIWrapper:
         max_tokens: Optional[int] = None,
         prompt: Optional[str] = None,
         temperature: Optional[float] = 0,
-        messages: Optional[list] = None,  # TODO: add pydantic type for messages
+        messages: Optional[List[Dict[str, str]]] = None,
         instruction: Optional[str] = None,
-        embedding_texts: Optional[list] = None,
-        **kwargs,
-    ) -> Tuple[Union[dict, Iterator[str]], dict]:
+        embedding_texts: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> Tuple[Union[OpenAIResponse, Iterator[OpenAIResponse]], DBRecord]:
         """
         Send a request to the OpenAI API and return response and logs for db write
 
@@ -298,7 +301,9 @@ class OpenAIWrapper:
         write_record_to_db(OpenAIRequests(**db_logs))
 
 
-def stream_generator_openai_chat(generator: Iterator) -> Iterator[str]:
+def stream_generator_openai_chat(
+    generator: Iterator[OpenAIResponse],
+) -> Iterator[OpenAIResponse]:
     for chunk in generator:
         answer = ""
         try:
@@ -306,10 +311,12 @@ def stream_generator_openai_chat(generator: Iterator) -> Iterator[str]:
             answer += current_response
         except KeyError:
             pass
-        yield answer
+        yield {"content": answer}
 
 
-def stream_generator_openai_completion(generator: Iterator) -> Iterator[str]:
+def stream_generator_openai_completion(
+    generator: Iterator[OpenAIResponse],
+) -> Iterator[OpenAIResponse]:
     for chunk in generator:
         answer = ""
         try:
@@ -317,4 +324,4 @@ def stream_generator_openai_completion(generator: Iterator) -> Iterator[str]:
             answer += current_response
         except KeyError:
             pass
-        yield answer
+        yield {"content": answer}
