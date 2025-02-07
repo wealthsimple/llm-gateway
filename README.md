@@ -91,6 +91,8 @@ wrapper.send_openai_request(
 ## 🚀 Quick Start for Developers
 
 This project uses Poetry, Pyenv for dependency and environment management. Check out the official installation documentation for [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) and [Pyenv](https://github.com/pyenv/pyenv) to get started.
+
+**Note:** This project requires Python 3.11.3. Make sure to install it using `pyenv install 3.11.3` before proceeding with the setup.
 For front-end portion, this project use npm and yarn for dependency management. The most up-to-date node version required for this project is declared in [.node-version](./front_end/.node-version).
 
 ### Backend Dependencies
