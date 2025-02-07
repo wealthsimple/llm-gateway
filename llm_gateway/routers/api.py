@@ -15,13 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from llm_gateway.constants import AppEnv, get_settings
+from llm_gateway.routers.awsbedrock_api import router as AWSBedrockRouter
 from llm_gateway.routers.cohere_api import router as CohereRouter
 from llm_gateway.routers.openai_api import router as OpenAIRouter
-from llm_gateway.routers.awsbedrock_api import router as AWSBedrockRouter
 from llm_gateway.routers.prompts_api import router as PromptsRouter
 
 settings = get_settings()
@@ -31,6 +33,14 @@ api_app.include_router(OpenAIRouter, prefix="/openai")
 api_app.include_router(CohereRouter, prefix="/cohere")
 api_app.include_router(AWSBedrockRouter, prefix="/awsbedrock")
 api_app.include_router(PromptsRouter, prefix="/prompts")
+
+
+@api_app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(
+        status_code=503, content={"detail": "Database error. Please try again later."}
+    )
+
 
 # allow CORS for local development with frontend
 if settings.APP_ENV in (AppEnv.DEVELOPMENT, AppEnv.STAGING):

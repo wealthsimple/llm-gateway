@@ -15,22 +15,33 @@ export const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [theme, setTheme] = useState<PromptTheme>('marketing');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onCreate({ title, content, theme });
-    setTitle('');
-    setContent('');
-    setTheme('marketing');
+    setError(null);
+    try {
+      await onCreate({ title, content, theme });
+      setTitle('');
+      setContent('');
+      setTheme('marketing');
+    } catch (err) {
+      setError('Failed to create prompt. Please try again.');
+    }
   };
 
   if (!open) return null;
 
   return (
-    <div className="dialog-overlay">
-      <div className="dialog-content">
-        <h2>Create New Prompt</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="dialog-overlay" role="presentation">
+      <div
+        role="dialog"
+        aria-labelledby="dialog-title"
+        aria-modal="true"
+        className="dialog-content"
+      >
+        <h2 id="dialog-title">Create New Prompt</h2>
+        <form onSubmit={handleSubmit} aria-label="Create prompt form">
           <div className="form-group">
             <label htmlFor="title">Title</label>
             <input
@@ -66,11 +77,11 @@ export const CreatePromptDialog: React.FC<CreatePromptDialogProps> = ({
               ))}
             </select>
           </div>
-          <div className="dialog-actions">
-            <button type="button" onClick={onClose}>
+          <div className="dialog-actions" role="group" aria-label="Dialog actions">
+            <button type="button" onClick={onClose} aria-label="Cancel creating prompt">
               Cancel
             </button>
-            <button type="submit" className="primary-btn">
+            <button type="submit" className="primary-btn" aria-label="Create new prompt">
               Create
             </button>
           </div>
