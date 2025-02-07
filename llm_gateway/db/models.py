@@ -17,7 +17,7 @@
 
 import enum
 
-from sqlalchemy import JSON, Column, DateTime, Float, Integer, String
+from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, func
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -58,3 +58,13 @@ class AWSBedrockRequests(CommonRequest):
     awsbedrock_response = Column(JSON, nullable=True)
     awsbedrock_model = Column(String, nullable=True)
     awsbedrock_endpoint = Column(String, nullable=False)
+
+
+class Prompt(Base):
+    __tablename__ = "prompts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    theme = Column(String, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
