@@ -21,11 +21,12 @@ jobs:
         run: |
           uv pip install --system -r requirements.txt -r requirements.dev.txt
           uv pip install --system -e .
+          python -m pip install black isort flake8 pytest
       - name: Run style guide, linter and typing checks
         run: |
-          black --check .
-          isort --check-only .
-          flake8 .
+          python -m black --check .
+          python -m isort --check-only .
+          python -m flake8 .
       - name: Run Python Test Suite
         run: |
-          pytest tests/
+          python -m pytest tests/
