@@ -17,16 +17,16 @@
 
 import datetime
 import json
-from typing import Iterator, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import boto3
-from fastapi.responses import JSONResponse
 
 from llm_gateway.constants import get_settings
 from llm_gateway.db.models import AWSBedrockRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.exceptions import AWSBEDROCK_EXCEPTIONS
 from llm_gateway.pii_scrubber import scrub_all
+from llm_gateway.types import AWSBedrockResponse, DBRecord
 from llm_gateway.utils import max_retries
 
 settings = get_settings()
@@ -113,11 +113,11 @@ class AWSBedrockWrapper:
         model: str,
         max_tokens: int,
         prompt: Optional[str] = None,
-        embedding_texts: Optional[list] = None,
+        embedding_texts: Optional[List[str]] = None,
         instruction: Optional[str] = None,
         temperature: Optional[float] = 0,
-        **kwargs,
-    ) -> Tuple[dict, str]:
+        **kwargs: Any,
+    ) -> Tuple[Dict[str, Any], str]:
         """
         Structure the body of the AWS Bedrock API request (Model specific)
 
@@ -219,8 +219,8 @@ class AWSBedrockWrapper:
     def _invoke_awsbedrock_model(
         self,
         model: str,
-        body: dict,
-    ) -> JSONResponse:
+        body: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Call the invoke model enpoint from the AWS Bedrock client and return response
 
@@ -249,9 +249,9 @@ class AWSBedrockWrapper:
         prompt: Optional[str] = None,
         temperature: Optional[float] = 0,
         instruction: Optional[str] = None,
-        embedding_texts: Optional[str] = None,
-        **kwargs,
-    ) -> Tuple[Union[dict, Iterator[str]], dict]:
+        embedding_texts: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> Tuple[AWSBedrockResponse, DBRecord]:
         """
         Send a request to the AWS Bedrock API and return response and logs for db write
 
@@ -309,7 +309,7 @@ class AWSBedrockWrapper:
 
         return awsbedrock_response, db_record
 
-    def write_logs_to_db(self, db_logs: dict):
+    def write_logs_to_db(self, db_logs: Dict[str, Any]) -> None:
         if isinstance(db_logs["awsbedrock_response"], list):
             db_logs["awsbedrock_response"] = "".join(db_logs["awsbedrock_response"])
         write_record_to_db(AWSBedrockRequests(**db_logs))

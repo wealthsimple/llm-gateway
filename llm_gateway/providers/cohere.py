@@ -17,7 +17,7 @@
 
 import datetime
 import json
-from typing import Iterator, Optional
+from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
 import cohere
 from cohere.responses.generation import StreamingText
@@ -26,6 +26,7 @@ from llm_gateway.constants import get_settings
 from llm_gateway.db.models import CohereRequests
 from llm_gateway.db.utils import write_record_to_db
 from llm_gateway.pii_scrubber import scrub_all
+from llm_gateway.types import CohereResponse, DBRecord
 from llm_gateway.utils import StreamProcessor
 
 settings = get_settings()
@@ -62,8 +63,8 @@ class CohereWrapper:
         additional_command: str,
         model: str,
         temperature: float,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
         """
         Call the summarize endpoint from the Cohere client and return response
 
@@ -93,8 +94,8 @@ class CohereWrapper:
         max_tokens: int,
         temperature: float,
         stream: bool = False,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> Union[Dict[str, Any], Iterator[StreamingText]]:
         """
         Call the generate endpoint from the Cohere client and return response
 
@@ -119,14 +120,14 @@ class CohereWrapper:
         )
         return resp
 
-    def _flatten_cohere_response(self, cohere_response):
+    def _flatten_cohere_response(self, cohere_response: Any) -> Dict[str, Any]:
         """
         Flatten response from Cohere as JSON
 
         :param cohere_response: Raw response from Cohere
-        :type cohere_response: _type_
+        :type cohere_response: Any
         :return: Flattened Cohere response as JSON
-        :rtype: _type_
+        :rtype: Dict[str, Any]
         """
         return json.loads(json.dumps(cohere_response, default=lambda o: o.__dict__))
 
@@ -139,8 +140,8 @@ class CohereWrapper:
         temperature: Optional[float] = 0,
         stream: bool = False,
         additional_command: Optional[str] = "",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> Tuple[Union[CohereResponse, Iterator[CohereResponse]], DBRecord]:
         """
         Send a request to the Cohere API and log interaction to the DB
 
@@ -203,7 +204,8 @@ class CohereWrapper:
         write_record_to_db(CohereRequests(**db_logs))
 
 
-def stream_generator_cohere(generator: Iterator) -> Iterator[dict]:
-    chunk: StreamingText
+def stream_generator_cohere(
+    generator: Iterator[StreamingText],
+) -> Iterator[Dict[str, str]]:
     for chunk in generator:
-        yield chunk.text
+        yield {"content": chunk.text}

@@ -25,10 +25,27 @@ flake8 = "^6.0.0"
 pre-commit = "^3.2.2"
 pytest = "^7.3.0"
 urllib3 = "1.26.19"  # https://github.com/psf/requests/issues/6437
+types-sqlalchemy = "^1.4.53.38"
+types-boto3 = "^1.36.15"
+types-setuptools = "^75.8.0.20250110"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.11"
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+strict_optional = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = ["cohere.*", "openai.*", "boto3.*", "botocore.*"]
+ignore_missing_imports = true
 
 [tool.isort]
 profile = "black"

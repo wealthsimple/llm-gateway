@@ -16,11 +16,11 @@
 # limitations under the License.
 
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from llm_gateway.constants import get_settings
@@ -32,6 +32,8 @@ class DB:
     """
     Class for managing connections to the logging DB
     """
+
+    db_url: str
 
     def __init__(self) -> None:
         self.db_url = settings.DATABASE_URL
@@ -47,17 +49,17 @@ class DB:
 
 
 @contextmanager
-def db_session_scope() -> Iterator[None]:
+def db_session_scope() -> Generator[Session, None, None]:
     """
     Open a connected DB session
 
     :raises Exception: Raised if session fails for some reason
     :yield: DB session
-    :rtype: Iterator[None]
+    :rtype: Generator[Session, None, None]
     """
     llm_gateway_db = DB()
-    session = sessionmaker(bind=llm_gateway_db.create_db_engine())
-    session = session()
+    session_factory = sessionmaker(bind=llm_gateway_db.create_db_engine())
+    session: Session = session_factory()
     try:
         yield session
         session.commit()
@@ -76,4 +78,5 @@ def write_record_to_db(db_record: DeclarativeMeta) -> None:
     :type db_record: DeclarativeMeta
     """
     with db_session_scope() as session:
-        session.add(db_record)
+        if session is not None:
+            session.add(db_record)
