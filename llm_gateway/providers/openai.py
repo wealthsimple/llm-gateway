@@ -23,7 +23,7 @@ import openai
 
 from llm_gateway.constants import get_settings
 from llm_gateway.db.models import OpenAIRequests
-from llm_gateway.db.utils import write_record_to_db
+from llm_gateway.db.utils import get_session
 from llm_gateway.exceptions import OPENAI_EXCEPTIONS
 from llm_gateway.pii_scrubber import scrub_all
 from llm_gateway.utils import StreamProcessor, max_retries
@@ -292,10 +292,12 @@ class OpenAIWrapper:
 
         return openai_response, db_record
 
-    def write_logs_to_db(self, db_logs: dict):
+    async def write_logs_to_db(self, db_logs: dict):
         if isinstance(db_logs["openai_response"], list):
             db_logs["openai_response"] = "".join(db_logs["openai_response"])
-        write_record_to_db(OpenAIRequests(**db_logs))
+        async with get_session() as session:
+            session.add(OpenAIRequests(**db_logs))
+            await session.commit()
 
 
 def stream_generator_openai_chat(generator: Iterator) -> Iterator[str]:

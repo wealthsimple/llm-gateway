@@ -24,7 +24,7 @@ from cohere.responses.generation import StreamingText
 
 from llm_gateway.constants import get_settings
 from llm_gateway.db.models import CohereRequests
-from llm_gateway.db.utils import write_record_to_db
+from llm_gateway.db.utils import get_session
 from llm_gateway.pii_scrubber import scrub_all
 from llm_gateway.utils import StreamProcessor
 
@@ -197,10 +197,12 @@ class CohereWrapper:
 
         return cohere_response, db_record
 
-    def write_logs_to_db(self, db_logs: dict):
+    async def write_logs_to_db(self, db_logs: dict):
         if isinstance(db_logs["cohere_response"], list):
             db_logs["cohere_response"] = "".join(db_logs["cohere_response"])
-        write_record_to_db(CohereRequests(**db_logs))
+        async with get_session() as session:
+            session.add(CohereRequests(**db_logs))
+            await session.commit()
 
 
 def stream_generator_cohere(generator: Iterator) -> Iterator[dict]:

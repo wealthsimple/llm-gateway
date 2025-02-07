@@ -97,6 +97,18 @@ export interface Conversation {
   id: number;
 }
 
+export const PROMPT_THEMES = ['marketing', 'finance', 'customer support', 'sales'] as const;
+export type PromptTheme = typeof PROMPT_THEMES[number];
+
+export interface Prompt {
+  id: number;
+  title: string;
+  content: string;
+  theme: PromptTheme;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ConversationsState {
   conversations: Conversation[];
   selectedConversationId: number | null;

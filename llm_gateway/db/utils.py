@@ -15,15 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from contextlib import contextmanager
 from typing import Iterator
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.decl_api import DeclarativeMeta
+from sqlalchemy.orm import Session, sessionmaker
 
 from llm_gateway.constants import get_settings
+
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 settings = get_settings()
 
@@ -43,37 +47,34 @@ class DB:
         :return: Database engine created
         :rtype: Engine
         """
-        return create_engine(self.db_url)
+        return create_engine(self.db_url.replace("postgresql+asyncpg", "postgresql"))
 
 
 @contextmanager
-def db_session_scope() -> Iterator[None]:
+def get_session() -> Iterator[Session]:
     """
-    Open a connected DB session
+    Open a DB session
 
     :raises Exception: Raised if session fails for some reason
     :yield: DB session
-    :rtype: Iterator[None]
+    :rtype: Iterator[Session]
     """
     llm_gateway_db = DB()
-    session = sessionmaker(bind=llm_gateway_db.create_db_engine())
-    session = session()
+    session_factory = sessionmaker(
+        bind=llm_gateway_db.create_db_engine(), expire_on_commit=False
+    )
+    session = session_factory()
     try:
+        logging.debug("Opening new database session")
         yield session
+        logging.debug("Committing database session")
         session.commit()
-    except Exception as e:  # noqa
+        logging.debug("Session committed successfully")
+    except Exception as e:
+        logging.error(f"Database error: {str(e)}")
+        logging.debug("Rolling back database session")
         session.rollback()
         raise Exception(f"Rolling back due to {e}")
     finally:
+        logging.debug("Closing database session")
         session.close()
-
-
-def write_record_to_db(db_record: DeclarativeMeta) -> None:
-    """
-    Used in routes to log data as a background task to the database
-
-    :param db_record: Populated DB Model defined in db.models, initialized with data
-    :type db_record: DeclarativeMeta
-    """
-    with db_session_scope() as session:
-        session.add(db_record)

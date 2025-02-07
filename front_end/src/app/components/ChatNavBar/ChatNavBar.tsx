@@ -30,6 +30,8 @@ interface ChatNavBarProps {
   isModelLoadingReply: boolean;
   deleteConversation: (arg: number | null) => void;
   updateChatTitle: (arg: number, arg2: string) => void;
+  showPromptLibrary: boolean;
+  setShowPromptLibrary: (show: boolean) => void;
 }
 
 export const ChatNavBarComponent = (props: ChatNavBarProps): JSX.Element => {
@@ -51,6 +53,18 @@ export const ChatNavBarComponent = (props: ChatNavBarProps): JSX.Element => {
         >
           <body>
             <button className="primary-btn">New Chat</button>
+          </body>
+        </article>
+        <article
+          className="prompt-library-button-div"
+          onClick={() =>
+            !props.isModelLoadingReply && props.setShowPromptLibrary(!props.showPromptLibrary)
+          }
+        >
+          <body>
+            <button className={`primary-btn ${props.showPromptLibrary ? 'active' : ''}`}>
+              Prompt Library
+            </button>
           </body>
         </article>
         <div className="multichat-nav-bar-scroll">

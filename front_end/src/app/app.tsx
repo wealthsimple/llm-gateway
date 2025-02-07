@@ -30,6 +30,7 @@ import {
 } from '../constants';
 import { ChatBoxComponent } from './components/ChatBox';
 import { ModelSettingsDialog } from './components/SettingsDialog';
+import { PromptLibrary } from './components/PromptLibrary';
 import {
   type Conversation,
   type ConversationsState,
@@ -179,6 +180,7 @@ function App(): JSX.Element {
   const appFooter = APP_FOOTER;
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showPromptLibrary, setShowPromptLibrary] = useState(false);
 
   return (
     <>
@@ -199,10 +201,14 @@ function App(): JSX.Element {
             isModelLoadingReply={isLoadingReply}
             deleteConversation={deleteConversation}
             updateChatTitle={updateChatTitle}
+            showPromptLibrary={showPromptLibrary}
+            setShowPromptLibrary={setShowPromptLibrary}
           />
 
           <div className="main-chat-container">
-            {currentSelectedId !== null ? (
+            {showPromptLibrary ? (
+              <PromptLibrary />
+            ) : currentSelectedId !== null ? (
               <>
                 <ModelBannerComponent
                   modelName={modelChoices[currentModel].name}
