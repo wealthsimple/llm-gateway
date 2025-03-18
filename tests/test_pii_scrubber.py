@@ -149,19 +149,19 @@ def test_scrub_postal_codes(test_postal: str):
 @pytest.mark.parametrize(
     argnames=["test_date"],
     argvalues=[
-        ("08/13/2004",),
-        ("13/08/2004",),
-        ("2004/13/08",),
-        ("2004/08/13",),
-        ("08-13-2004",),
-        ("13-08-2004",),
-        ("2004-13-08",),
-        ("2004-08-13",),
-        ("08.13.2004",),
-        ("13.08.2004",),
-        ("2004.13.08",),
-        ("2004.08.13",),
-        ("8/4/2004",),
+        ("01/01/2000",),
+        ("02/02/2000",),
+        ("2000/03/03",),
+        ("2000/04/04",),
+        ("05-05-2000",),
+        ("06-06-2000",),
+        ("2000-07-07",),
+        ("2000-08-08",),
+        ("09.09.2000",),
+        ("10.10.2000",),
+        ("2000.11.11",),
+        ("2000.12.12",),
+        ("1/1/2000",),
     ],
 )
 def test_scrub_dates(test_date: str):
@@ -246,6 +246,7 @@ def test_pii_scrubber_end_to_end(mock_write_record_to_db, mock_openai_module):
             "My credit card number is 1234-5678-9012-3456",
             "The user's email is email@123.123.123.123, AKA email@domain.ca",
             "The user's postal code is A1A 1A1, AKA a1a1A1",
+            "The user's birthday is 1/1/2000",
         ],
     )
 
@@ -256,6 +257,7 @@ def test_pii_scrubber_end_to_end(mock_write_record_to_db, mock_openai_module):
         "My credit card number is [REDACTED CREDIT CARD NUMBER]",
         "The user's email is [REDACTED EMAIL ADDRESS], AKA [REDACTED EMAIL ADDRESS]",
         "The user's postal code is [REDACTED POSTAL CODE], AKA [REDACTED POSTAL CODE]",
+        "The user's birthday is [REDACTED DATE]",
     ]
 
     # Truncate the result. called_with contains an extra message - the mock response,
