@@ -41,6 +41,7 @@ import pytest
 from llm_gateway.pii_scrubber import (
     scrub_all,
     scrub_credit_card_numbers,
+    scrub_dates,
     scrub_email_addresses,
     scrub_phone_numbers,
     scrub_postal_codes,
@@ -143,6 +144,33 @@ def test_scrub_postal_codes(test_postal: str):
     test_text = format_str.format(test_postal)
     expected_text = format_str.format("[REDACTED POSTAL CODE]")
     assert scrub_postal_codes(test_text) == expected_text
+
+
+@pytest.mark.parametrize(
+    argnames=["test_date"],
+    argvalues=[
+        ("08/13/2004",),
+        ("13/08/2004",),
+        ("2004/13/08",),
+        ("2004/08/13",),
+        ("08-13-2004",),
+        ("13-08-2004",),
+        ("2004-13-08",),
+        ("2004-08-13",),
+        ("08.13.2004",),
+        ("13.08.2004",),
+        ("2004.13.08",),
+        ("2004.08.13",),
+        ("8/4/2004",),
+    ],
+)
+def test_scrub_dates(test_date: str):
+    """Test date scrubbing."""
+
+    format_str = "My birthday is {0}."
+    test_text = format_str.format(test_date)
+    expected_text = format_str.format("[REDACTED DATE]")
+    assert scrub_dates(test_text) == expected_text
 
 
 def test_scrub_all_dict():
