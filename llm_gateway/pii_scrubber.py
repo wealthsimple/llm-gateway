@@ -127,11 +127,28 @@ def scrub_postal_codes(text: str) -> str:
     )
 
 
+def scrub_dates(text: str) -> str:
+    """
+    Scrub dates in text
+
+    :param text: Input text to scrub
+    :type text: str
+    :return: Input text with any dates scrubbed
+    :rtype: str
+    """
+    return re.sub(
+        r"\b(?:\d{1,2}[-/.]\d{1,2}[-/.]\d{4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\b",
+        "[REDACTED DATE]",
+        text,
+    )
+
+
 ALL_SCRUBBERS = [
     scrub_phone_numbers,
     scrub_credit_card_numbers,
     scrub_email_addresses,
     scrub_postal_codes,
+    scrub_dates,
     # move sin scrubber to the end since it's over-eager
     scrub_sin_numbers,
 ]
