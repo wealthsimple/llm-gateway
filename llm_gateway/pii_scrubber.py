@@ -133,7 +133,7 @@ def scrub_dates(text: str) -> str:
 
     :param text: Input text to scrub
     :type text: str
-    :return: Input text with any datess scrubbed
+    :return: Input text with any dates scrubbed
     :rtype: str
     """
     return re.sub(
