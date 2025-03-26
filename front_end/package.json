@@ -18,7 +18,7 @@
     "env-cmd": "^10.1.0",
     "file-saver": "^2.0.5",
     "highlight.js": "^11.8.0",
-    "markdown-to-jsx": "^7.2.1",
+    "markdown-to-jsx": "^7.4.0",
     "nth-check": "^2.0.1",
     "papaparse": "^5.4.1",
     "react": "^18.2.0",
